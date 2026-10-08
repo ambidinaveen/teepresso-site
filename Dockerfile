@@ -54,7 +54,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD curl -fsS "http://127.0.0.1:${PORT}/accounts/login/" || exit 1
 
 ENTRYPOINT ["deploy/entrypoint.sh"]
-CMD ["gunicorn", "--chdir", "/app/teepresso_site", "config.wsgi:application", \
+CMD ["gunicorn", "config.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "3", "--threads", "2", \
      "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-"]
