@@ -23,14 +23,21 @@ SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "dev-insecure-key-change-me-in-production"
 )
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
+_render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     if h.strip()
 ]
+if _render_hostname and _render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_render_hostname)
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.environ.get("DJANGO_CSRF_TRUSTED", "").split(",") if o.strip()
 ]
+if _render_hostname:
+    _render_origin = f"https://{_render_hostname}"
+    if _render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_render_origin)
 
 # --- Applications ---------------------------------------------------------
 INSTALLED_APPS = [
