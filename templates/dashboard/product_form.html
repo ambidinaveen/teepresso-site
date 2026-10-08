@@ -1,0 +1,32 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}{% if product %}Edit{% else %}New{% endif %} product{% endblock %}
+{% block heading %}{% if product %}Edit product{% else %}New product{% endif %}{% endblock %}
+{% block dash %}
+<div class="stat-card" style="max-width:820px">
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-8"><label class="small fw-semibold">Name</label>{{ form.name }}</div>
+      <div class="col-md-4"><label class="small fw-semibold">SKU</label>{{ form.sku }}</div>
+      <div class="col-md-6"><label class="small fw-semibold">Category</label>{{ form.category }}</div>
+      <div class="col-md-6"><label class="small fw-semibold">Brand</label>{{ form.brand }}</div>
+      <div class="col-12"><label class="small fw-semibold">Short description</label>{{ form.short_description }}</div>
+      <div class="col-12"><label class="small fw-semibold">Description</label>{{ form.description }}</div>
+      <div class="col-12"><label class="small fw-semibold">Specifications (Key: Value per line)</label>{{ form.specifications }}</div>
+      <div class="col-md-4"><label class="small fw-semibold">Base price ₹</label>{{ form.base_price }}</div>
+      <div class="col-md-4"><label class="small fw-semibold">Sale price ₹</label>{{ form.sale_price }}</div>
+      <div class="col-md-4"><label class="small fw-semibold">Min order qty</label>{{ form.min_order_qty }}</div>
+      <div class="col-12"><label class="small fw-semibold">Main image</label>{{ form.image }}</div>
+      <div class="col-12 d-flex gap-4 flex-wrap mt-2">
+        <div class="form-check">{{ form.is_customizable }}<label class="form-check-label small">Customizable</label></div>
+        <div class="form-check">{{ form.featured }}<label class="form-check-label small">Featured</label></div>
+        <div class="form-check">{{ form.trending }}<label class="form-check-label small">Trending</label></div>
+        <div class="form-check">{{ form.best_seller }}<label class="form-check-label small">Best seller</label></div>
+        <div class="form-check">{{ form.active }}<label class="form-check-label small">Active</label></div>
+      </div>
+    </div>
+    {% if form.errors %}<div class="alert alert-danger mt-3 small">{{ form.errors }}</div>{% endif %}
+    <div class="mt-3"><button class="btn btn-grad">Save product</button> <a href="{% url 'dashboard:products' %}" class="btn btn-link">Cancel</a></div>
+    <p class="small text-muted mt-2">Tip: add gallery images, variants & stock from <a href="{% url 'admin:index' %}">Django admin</a> after saving.</p>
+  </form>
+</div>
+{% endblock %}

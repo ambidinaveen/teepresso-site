@@ -1,0 +1,49 @@
+{% extends "base_panel.html" %}
+{% block title %}Dispatch &amp; Shipping{% endblock %}
+{% block panel_name %}Dispatch{% endblock %}
+{% block search %}Scan / search order…{% endblock %}
+{% block nav %}
+  <div class="label">Fulfilment</div>
+  <a href="{% url 'panels:dispatch' %}" class="nav-item active"><span class="ico">🚚</span> Dispatch Queue</a>
+{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Dispatch &amp; Shipping</h1><span class="sub">Verify · QC · label · invoice · E-Way</span></div>
+
+<div class="grid g-4 mb">
+  <div class="card stat"><div class="k">Ready to process</div><div class="v">{{ stats.ready }}</div></div>
+  <div class="card stat"><div class="k">Shipped today</div><div class="v">{{ stats.shipped_today }}</div></div>
+  <div class="card stat"><div class="k">E-Way threshold</div><div class="v" style="font-size:18px;">₹{{ eway_threshold }}</div></div>
+  <div class="card stat"><div class="k">E-Way API</div><div class="v" style="font-size:16px;">{% if eway_api_on %}<span class="badge ok">ON</span>{% else %}<span class="badge warn">Manual</span>{% endif %}</div></div>
+</div>
+
+{% if not eway_api_on %}<div class="alert info" style="margin-bottom:14px;">E-Way API is off (safe mode). Orders over ₹{{ eway_threshold }} are <b>flagged "E-Way required"</b> — no government bill is auto-filed until you connect a real GSP API.</div>{% endif %}
+
+<div class="card pad-0">
+  <table class="table">
+    <tr><th>Order #</th><th>Customer</th><th>Pieces</th><th>Value</th><th>E-Way</th><th>Verify · QC · AWB · Dispatch</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td><b>{{ r.o.order_no }}</b>{% if r.o.urgent %} <span class="badge danger">URGENT</span>{% endif %}</td>
+      <td>{{ r.o.customer.name }}</td>
+      <td>{{ r.o.qty_total }}</td>
+      <td>₹{{ r.o.total }}</td>
+      <td>
+        {% if r.o.needs_eway %}<span class="badge {% if eway_api_on %}ok{% else %}warn{% endif %}">{% if eway_api_on %}Auto ✓{% else %}Required{% endif %}</span>
+        {% else %}<span class="badge muted">N/A</span>{% endif %}
+      </td>
+      <td>
+        <form method="post" action="{% url 'panels:dispatch_process' r.o.order_no %}" class="flex" style="gap:6px;flex-wrap:wrap;">
+          {% csrf_token %}
+          <input class="input" name="piece_count" type="number" placeholder="pcs" value="{{ r.o.qty_total }}" style="width:64px;padding:5px;">
+          <select name="qc_result" class="input" style="width:auto;padding:5px;font-size:12px;">
+            <option value="pass">QC Pass</option><option value="fail">QC Fail</option><option value="pending">QC Pending</option>
+          </select>
+          <input class="input" name="awb" placeholder="AWB" style="width:100px;padding:5px;">
+          <button class="btn sm accent" name="action" value="dispatch">Dispatch →</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="6" class="muted" style="padding:20px;">Nothing in the dispatch queue. Orders appear here once in Production/QC.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}FAQ — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <div class="text-center mb-4"><h2 class="fw-bold">Frequently Asked <span class="text-grad">Questions</span></h2></div>
+  <div class="mx-auto" style="max-width:820px">
+    {% for cat in categories %}
+    <h6 class="fw-bold text-muted text-uppercase small mt-4">{{ cat }}</h6>
+    <div class="accordion" id="acc{{ forloop.counter }}">
+      {% for f in faqs %}{% if f.category == cat %}
+      <div class="accordion-item border-0 mb-2 card-tp">
+        <h2 class="accordion-header"><button class="accordion-button collapsed fw-semibold" data-bs-toggle="collapse" data-bs-target="#q{{ f.id }}">{{ f.question }}</button></h2>
+        <div id="q{{ f.id }}" class="accordion-collapse collapse"><div class="accordion-body text-muted">{{ f.answer|linebreaks }}</div></div>
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+    {% empty %}<p class="text-muted text-center">No FAQs yet.</p>{% endfor %}
+    <div class="text-center mt-4"><p class="text-muted">Still have questions?</p><a href="{% url 'cms:contact' %}" class="btn btn-grad">Contact us</a></div>
+  </div>
+</div>
+{% endblock %}

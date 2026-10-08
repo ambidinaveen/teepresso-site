@@ -1,0 +1,29 @@
+{% load humanize %}
+<div class="card-tp product-card lift">
+  <div class="pc-img">
+    {% if p.on_sale %}<span class="pc-badge">-{{ p.discount_pct }}%</span>{% endif %}
+    <button class="pc-wish js-wish" data-id="{{ p.id }}" title="Wishlist"><i class="bi bi-heart"></i></button>
+    <a href="{{ p.get_absolute_url }}">
+      {% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}" loading="lazy">
+      {% else %}<div class="d-grid h-100 place-items-center text-center align-content-center text-muted"><i class="bi bi-image fs-1"></i></div>{% endif %}
+    </a>
+    <a href="{{ p.get_absolute_url }}" class="pc-quick">Quick View <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="pc-body">
+    <div class="pc-cat">{{ p.category.name }}</div>
+    <a href="{{ p.get_absolute_url }}" class="pc-name">{{ p.name|truncatechars:42 }}</a>
+    <div class="stars mb-1">
+      {% for s in p.stars %}<i class="bi bi-star-fill"></i>{% endfor %}
+      {% if p.review_count %}<span class="text-muted small">({{ p.review_count }})</span>{% endif %}
+    </div>
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <span class="pc-price">From ₹{{ p.price|floatformat:0|intcomma }}</span>
+        {% if p.on_sale %}<span class="pc-strike ms-1">₹{{ p.base_price|floatformat:0|intcomma }}</span>{% endif %}
+      </div>
+      <form method="post" action="{% url 'cart:add' p.id %}" class="js-add-cart">{% csrf_token %}
+        <button class="btn btn-grad btn-sm px-2 py-1" title="Add to cart"><i class="bi bi-bag-plus"></i></button>
+      </form>
+    </div>
+  </div>
+</div>

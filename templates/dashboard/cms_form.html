@@ -1,0 +1,17 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}CMS · {{ label }}{% endblock %}{% block heading %}{{ label }} — edit{% endblock %}
+{% block dash %}
+<div class="stat-card" style="max-width:760px">
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {% for field in form %}
+    <div class="mb-3">
+      <label class="small fw-semibold">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    <button class="btn btn-grad">Save</button>
+    <a href="{% url 'dashboard:cms_list' kind %}" class="btn btn-link">Cancel</a>
+  </form>
+</div>
+{% endblock %}

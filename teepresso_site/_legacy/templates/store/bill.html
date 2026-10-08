@@ -1,0 +1,50 @@
+{% extends "base_store.html" %}
+{% block title %}Bill {{ order.order_no }}{% endblock %}
+{% block content %}
+<div style="max-width:680px;margin:24px auto;padding:0 24px;">
+  <div class="card" id="bill">
+    <div class="flex between" style="align-items:flex-start;">
+      <div class="brand"><div class="logo">T</div><div><b>Teepresso</b><small class="muted">Custom T-shirt printing</small></div></div>
+      <div style="text-align:right;">
+        <h2 style="font-size:18px;">{% if order.payment_status == 'paid' %}TAX INVOICE{% else %}PROFORMA BILL{% endif %}</h2>
+        <small class="muted">{{ order.order_no }} · {{ order.created_at|date:"d M Y" }}</small>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div class="flex between">
+      <div><small class="muted">Billed to</small><br><b>{{ order.customer.name }}</b><br>
+        <small>{{ order.customer.phone }}</small><br><small>{{ order.address|linebreaksbr }}</small></div>
+      <div style="text-align:right;"><small class="muted">Payment</small><br>
+        <span class="badge {% if order.payment_status == 'paid' %}ok{% else %}warn{% endif %}">{{ order.get_payment_status_display }}</span><br>
+        <small class="muted">Channel: {{ order.get_channel_display }}</small></div>
+    </div>
+    <div class="hr"></div>
+    <table class="table">
+      <tr><th>Description</th><th>HSN</th><th>Qty</th><th>Rate</th><th style="text-align:right;">Amount</th></tr>
+      <tr>
+        <td>{{ order.design_summary }}{% if order.urgent %} <span class="badge warn">Urgent</span>{% endif %}<br>
+          <small class="muted">Sizes: {% for it in items %}{{ it.size.code }}×{{ it.qty }}{% if not forloop.last %}, {% endif %}{% endfor %}</small></td>
+        <td>6109</td>
+        <td>{{ order.qty_total }}</td>
+        <td>₹{{ items.0.unit_price }}</td>
+        <td style="text-align:right;">₹{{ order.subtotal }}</td>
+      </tr>
+    </table>
+    <div style="margin-left:auto;max-width:280px;margin-top:10px;">
+      <div class="flex between"><span class="muted">Subtotal</span><span>₹{{ order.subtotal }}</span></div>
+      {% if order.urgent %}<div class="flex between"><span class="muted">Urgent (+{{ RULES.URGENT_PCT }}%)</span><span>₹{{ order.urgent_charge }}</span></div>{% endif %}
+      <div class="flex between"><span class="muted">Taxable value</span><span>₹{{ taxable }}</span></div>
+      <div class="flex between"><span class="muted">CGST ({{ RULES.GST_RATE|floatformat }}%÷2)</span><span>₹{{ cgst }}</span></div>
+      <div class="flex between"><span class="muted">SGST</span><span>₹{{ sgst }}</span></div>
+      <div class="hr"></div>
+      <div class="flex between"><b>Grand Total</b><b class="price" style="font-size:20px;">₹{{ order.total }}</b></div>
+    </div>
+    <div class="hr"></div>
+    <small class="muted">This is a computer-generated bill. Delivery in {{ RULES.DELIVERY_DAYS }}. Thank you for choosing Teepresso.</small>
+  </div>
+  <div class="flex" style="gap:10px;margin-top:14px;justify-content:center;">
+    <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
+    <a class="btn ghost" href="{% url 'storefront:tracking_detail' order.order_no %}">Track order</a>
+  </div>
+</div>
+{% endblock %}

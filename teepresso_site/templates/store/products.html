@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}Shop — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <nav class="small text-muted mb-3"><a href="{% url 'storefront:index' %}">Home</a> / Shop {% if q %}/ “{{ q }}”{% endif %}</nav>
+  <div class="row g-4">
+    <!-- filters -->
+    <aside class="col-lg-3">
+      <form method="get" class="card-tp p-3" id="filterForm">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        <h6 class="fw-bold mb-3"><i class="bi bi-funnel"></i> Filters</h6>
+        <div class="mb-3">
+          <label class="small fw-semibold text-muted">Category</label>
+          <select name="category" class="form-select form-select-sm mt-1" onchange="this.form.submit()">
+            <option value="">All categories</option>
+            {% for c in categories %}<option value="{{ c.slug }}" {% if active_category == c.slug %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="small fw-semibold text-muted">Price range (₹)</label>
+          <div class="d-flex gap-2 mt-1">
+            <input type="number" name="min" value="{{ request.GET.min }}" class="form-control form-control-sm" placeholder="Min">
+            <input type="number" name="max" value="{{ request.GET.max }}" class="form-control form-control-sm" placeholder="Max">
+          </div>
+        </div>
+        {% if brands %}
+        <div class="mb-3">
+          <label class="small fw-semibold text-muted">Brand</label>
+          <select name="brand" class="form-select form-select-sm mt-1">
+            <option value="">All brands</option>
+            {% for b in brands %}<option value="{{ b.slug }}" {% if request.GET.brand == b.slug %}selected{% endif %}>{{ b.name }}</option>{% endfor %}
+          </select>
+        </div>
+        {% endif %}
+        <button class="btn btn-grad w-100 btn-sm">Apply</button>
+        <a href="{% url 'products:list' %}" class="btn btn-link btn-sm w-100 text-muted">Reset</a>
+      </form>
+    </aside>
+
+    <!-- grid -->
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">{{ total }} product{{ total|pluralize }}</span>
+        <form method="get" class="d-flex align-items-center gap-2">
+          {% for k,v in request.GET.items %}{% if k != 'sort' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+          <label class="small text-muted">Sort</label>
+          <select name="sort" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+            <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Popularity</option>
+            <option value="new" {% if sort == 'new' %}selected{% endif %}>Newest</option>
+            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low → High</option>
+            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High → Low</option>
+          </select>
+        </form>
+      </div>
+
+      <div class="row g-3">
+        {% for item in products %}
+        <div class="col-6 col-md-4" data-aos="fade-up">{% include 'partials/product_card.html' with p=item %}</div>
+        {% empty %}
+        <div class="col-12 text-center py-5 text-muted"><i class="bi bi-search fs-1"></i><p class="mt-2">No products found. Try a different filter.</p></div>
+        {% endfor %}
+      </div>
+
+      {% if products.has_other_pages %}
+      <nav class="mt-4"><ul class="pagination justify-content-center">
+        {% if products.has_previous %}<li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}page={{ products.previous_page_number }}">‹</a></li>{% endif %}
+        {% for n in products.paginator.page_range %}
+          <li class="page-item {% if n == products.number %}active{% endif %}"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}page={{ n }}">{{ n }}</a></li>
+        {% endfor %}
+        {% if products.has_next %}<li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}page={{ products.next_page_number }}">›</a></li>{% endif %}
+      </ul></nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block content %}
+
+<!-- HERO -->
+<section class="container-tp mt-3">
+  <div id="heroSlider" class="carousel slide hero" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      {% for b in banners %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        <div class="hero-slide" {% if b.bg_gradient %}style="background:{{ b.bg_gradient }}"{% endif %}>
+          <div style="max-width:560px">
+            <span class="hero-badge"><i class="bi bi-stars"></i> {{ RULES.TAGLINE }}</span>
+            <h1 class="my-3">{{ b.title }}</h1>
+            <p class="lead opacity-75">{{ b.subtitle }}</p>
+            <a href="{{ b.cta_link }}" class="btn btn-light btn-lg rounded-pill fw-semibold mt-2 px-4">{{ b.cta_text }} <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="carousel-item active">
+        <div class="hero-slide">
+          <div style="max-width:560px">
+            <span class="hero-badge"><i class="bi bi-stars"></i> {{ RULES.TAGLINE }}</span>
+            <h1 class="my-3">Corporate gifts & custom printing,<br>delivered across India</h1>
+            <p class="lead opacity-75">Add your logo to t-shirts, caps, pens, notebooks & premium gift sets.</p>
+            <a href="{% url 'products:list' %}" class="btn btn-light btn-lg rounded-pill fw-semibold mt-2 px-4">Shop Now <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% if banners.count > 1 %}
+    <button class="carousel-control-prev" data-bs-target="#heroSlider" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+    <button class="carousel-control-next" data-bs-target="#heroSlider" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+    {% endif %}
+  </div>
+</section>
+
+<!-- TRUST STRIP -->
+<section class="container-tp mt-4">
+  <div class="row g-3 text-center">
+    <div class="col-6 col-md-3" data-aos="fade-up"><div class="card-tp p-3 d-flex flex-row align-items-center gap-3"><span class="feature-ic"><i class="bi bi-patch-check"></i></span><div class="text-start"><b>Premium Quality</b><div class="small text-muted">Tested materials</div></div></div></div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="80"><div class="card-tp p-3 d-flex flex-row align-items-center gap-3"><span class="feature-ic"><i class="bi bi-truck"></i></span><div class="text-start"><b>Fast Delivery</b><div class="small text-muted">{{ RULES.DELIVERY_DAYS }} PAN-India</div></div></div></div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="160"><div class="card-tp p-3 d-flex flex-row align-items-center gap-3"><span class="feature-ic"><i class="bi bi-shield-lock"></i></span><div class="text-start"><b>Secure Payments</b><div class="small text-muted">UPI / Cards / NB</div></div></div></div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="240"><div class="card-tp p-3 d-flex flex-row align-items-center gap-3"><span class="feature-ic"><i class="bi bi-buildings"></i></span><div class="text-start"><b>Corporate Expertise</b><div class="small text-muted">Bulk gifting</div></div></div></div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section container-tp">
+  <div class="text-center"><h2 class="section-title">Shop by <span class="text-grad">Category</span></h2><p class="section-sub">From apparel to premium gift sets</p></div>
+  <div class="row g-3">
+    {% for cat in categories %}
+    <div class="col-6 col-md-4 col-lg-2" data-aos="zoom-in" data-aos-delay="{{ forloop.counter0|add:forloop.counter0 }}0">
+      <a class="cat-tile" href="{{ cat.get_absolute_url }}">
+        <div class="cat-ic"><i class="bi bi-{{ cat.icon|default:'box-seam' }}"></i></div>
+        <div class="fw-bold">{{ cat.name }}</div>
+        <div class="small text-muted">{{ cat.products.count }} items</div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- FEATURED / HOT SELLING -->
+{% if featured %}
+<section class="section pt-0 container-tp">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div><h2 class="section-title">🔥 Hot Selling</h2><p class="section-sub mb-0">Our customers' favourites</p></div>
+    <a href="{% url 'products:list' %}?sort=popular" class="btn-ghost-tp">View all</a>
+  </div>
+  <div class="row g-3">
+    {% for item in featured %}<div class="col-6 col-md-4 col-lg-3" data-aos="fade-up">{% include 'partials/product_card.html' with p=item %}</div>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- PROMO BANNER -->
+<section class="container-tp my-4">
+  <div class="glass p-4 p-md-5 text-center" style="background:var(--grad-soft)">
+    <h3 class="fw-bold mb-2">Need 100+ pieces for your team?</h3>
+    <p class="text-muted mb-3">Get bulk pricing, dedicated account manager & custom branding.</p>
+    <a href="{% url 'quotations:request' %}" class="btn btn-grad btn-lg px-4">Request a Quotation <i class="bi bi-arrow-right"></i></a>
+  </div>
+</section>
+
+<!-- BEST SELLERS -->
+{% if best_sellers %}
+<section class="section pt-2 container-tp">
+  <div class="text-center"><h2 class="section-title">Best <span class="text-grad">Sellers</span></h2><p class="section-sub">Trusted by 500+ brands</p></div>
+  <div class="row g-3">
+    {% for item in best_sellers %}<div class="col-6 col-md-4 col-lg-3" data-aos="fade-up">{% include 'partials/product_card.html' with p=item %}</div>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- WHY CHOOSE US -->
+<section class="section container-tp">
+  <div class="glass p-4 p-md-5">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-5"><h2 class="section-title">Why brands choose <span class="text-grad">{{ BRAND }}</span></h2>
+        <p class="text-muted">From a single tee to 10,000-piece corporate orders — we handle design, print, QC, GST invoicing and delivery end-to-end.</p>
+        <a href="{% url 'products:list' %}" class="btn btn-grad mt-2">Start customising</a>
+      </div>
+      <div class="col-lg-7">
+        <div class="row g-3">
+          <div class="col-sm-6"><div class="d-flex gap-3"><span class="feature-ic"><i class="bi bi-palette"></i></span><div><b>Free design help</b><p class="small text-muted mb-0">Our team perfects your artwork before print.</p></div></div></div>
+          <div class="col-sm-6"><div class="d-flex gap-3"><span class="feature-ic"><i class="bi bi-cash-coin"></i></span><div><b>Bulk discounts</b><p class="small text-muted mb-0">Up to 25% off on large quantities.</p></div></div></div>
+          <div class="col-sm-6"><div class="d-flex gap-3"><span class="feature-ic"><i class="bi bi-receipt"></i></span><div><b>GST invoicing</b><p class="small text-muted mb-0">Compliant invoices + E-Way support.</p></div></div></div>
+          <div class="col-sm-6"><div class="d-flex gap-3"><span class="feature-ic"><i class="bi bi-headset"></i></span><div><b>Dedicated support</b><p class="small text-muted mb-0">WhatsApp & email, real humans.</p></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+{% if testimonials %}
+<section class="section pt-0 container-tp">
+  <div class="text-center"><h2 class="section-title">What our <span class="text-grad">customers</span> say</h2><p class="section-sub">Real reviews from real teams</p></div>
+  <div class="row g-3">
+    {% for t in testimonials %}
+    <div class="col-md-6 col-lg-4" data-aos="fade-up">
+      <div class="card-tp p-4 h-100">
+        <div class="stars mb-2">{% for s in t.stars %}<i class="bi bi-star-fill"></i>{% endfor %}</div>
+        <p class="mb-3">“{{ t.quote }}”</p>
+        <div class="d-flex align-items-center gap-2 mt-auto">
+          <div class="cat-ic" style="width:40px;height:40px;font-size:1rem">{{ t.name.0 }}</div>
+          <div><b>{{ t.name }}</b><div class="small text-muted">{{ t.role }}</div></div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- BLOG TEASER -->
+{% if posts %}
+<section class="section pt-0 container-tp">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div><h2 class="section-title">Latest from the <span class="text-grad">Blog</span></h2><p class="section-sub mb-0">Gifting ideas & printing guides</p></div>
+    <a href="{% url 'blogs:list' %}" class="btn-ghost-tp">All articles</a>
+  </div>
+  <div class="row g-3">
+    {% for post in posts %}
+    <div class="col-md-4" data-aos="fade-up">
+      <a class="card-tp d-block h-100 text-decoration-none text-dark" href="{{ post.get_absolute_url }}">
+        <div class="pc-img" style="aspect-ratio:16/9">{% if post.cover %}<img src="{{ post.cover.url }}" alt="">{% else %}<div class="d-grid h-100 align-content-center text-center text-muted"><i class="bi bi-journal-text fs-1"></i></div>{% endif %}</div>
+        <div class="p-3"><span class="badge-soft">{{ post.category.name|default:'Article' }}</span><h6 class="fw-bold mt-2">{{ post.title|truncatechars:60 }}</h6><p class="small text-muted mb-0">{{ post.excerpt|truncatechars:90 }}</p></div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- FAQ -->
+{% if faqs %}
+<section class="section pt-0 container-tp">
+  <div class="text-center"><h2 class="section-title">Frequently asked <span class="text-grad">questions</span></h2></div>
+  <div class="accordion mx-auto" id="faqAcc" style="max-width:780px">
+    {% for f in faqs %}
+    <div class="accordion-item border-0 mb-2 card-tp">
+      <h2 class="accordion-header"><button class="accordion-button collapsed fw-semibold" data-bs-toggle="collapse" data-bs-target="#faq{{ f.id }}">{{ f.question }}</button></h2>
+      <div id="faq{{ f.id }}" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body text-muted">{{ f.answer }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-3"><a href="{% url 'cms:faq' %}" class="btn-ghost-tp">See all FAQs</a></div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load humanize %}
+{% block title %}{{ order.order_no }}{% endblock %}{% block heading %}Order {{ order.order_no }}{% endblock %}
+{% block dash %}
+<a href="{% url 'dashboard:orders' %}" class="btn btn-link px-0"><i class="bi bi-arrow-left"></i> Orders</a>
+<div class="row g-3">
+  <div class="col-lg-8"><div class="stat-card">
+    <div class="tl my-3">{% for step in timeline %}<div class="tl-step {% if step.done %}done{% elif step.active %}active{% endif %}"><div class="tl-dot">{% if step.done %}<i class="bi bi-check"></i>{% else %}{{ forloop.counter }}{% endif %}</div><div class="tl-label">{{ step.label }}</div></div>{% endfor %}</div>
+    <table class="table mt-3"><thead><tr><th>Item</th><th>Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
+      <tbody>{% for it in order.items.all %}<tr><td>{{ it.name }}{% if it.variant_label %} <span class="small text-muted">({{ it.variant_label }})</span>{% endif %}{% if it.design %} <span class="badge-soft">Design #{{ it.design.id }}</span>{% endif %}</td><td>{{ it.qty }}</td><td class="text-end">₹{{ it.unit_price|floatformat:0|intcomma }}</td><td class="text-end">₹{{ it.line_total|floatformat:0|intcomma }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <div class="text-end fw-bold">Grand total: ₹{{ order.total|floatformat:0|intcomma }}</div>
+  </div></div>
+  <div class="col-lg-4">
+    <div class="stat-card mb-3"><h6 class="fw-bold">Customer</h6><p class="small mb-1">{{ order.full_name }} · {{ order.phone }}<br>{{ order.email }}</p><p class="small text-muted">{{ order.shipping_address|linebreaksbr }}</p>{% if order.gst_number %}<p class="small">GSTIN: {{ order.gst_number }}</p>{% endif %}<a href="{% url 'orders:invoice' order.order_no %}" class="btn btn-sm btn-ghost-tp">Invoice</a></div>
+    <div class="stat-card mb-3"><h6 class="fw-bold">Payment</h6>
+      <p class="small mb-1">Method: <b class="text-uppercase">{{ order.payment_method }}</b><br>
+        Status: <span class="status-pill {% if order.payment_status == 'paid' %}s-delivered{% elif order.payment_status == 'pending' %}s-pending{% else %}s-cancelled{% endif %}">{{ order.get_payment_status_display }}</span></p>
+      {% if payment.upi_ref %}<p class="small mb-1">UPI ref (UTR): <b>{{ payment.upi_ref }}</b></p>{% endif %}
+      {% if order.payment_status != 'paid' %}
+      <form method="post" onsubmit="return confirm('Confirm you have RECEIVED this payment in your UPI/bank account? This marks the order paid.');">{% csrf_token %}
+        <input type="hidden" name="action" value="verify_payment">
+        <button class="btn btn-grad w-100 btn-sm mt-1"><i class="bi bi-patch-check"></i> Verify &amp; mark paid</button>
+      </form>
+      <small class="text-muted d-block mt-2">Only after checking your UPI/bank statement.</small>
+      {% else %}<p class="small text-success mb-0"><i class="bi bi-check-circle-fill"></i> Payment confirmed.</p>{% endif %}
+    </div>
+    <div class="stat-card mb-3"><h6 class="fw-bold">Update status</h6>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="status">
+        <select name="status" class="form-select mb-2">{% for v,l in statuses %}<option value="{{ v }}" {% if order.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+        <input name="note" class="form-control mb-2" placeholder="Note (optional)">
+        <button class="btn btn-grad w-100">Update & notify</button>
+      </form>
+    </div>
+    <div class="stat-card"><h6 class="fw-bold">Shipping / tracking</h6>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="tracking">
+        <input name="courier" class="form-control mb-2" placeholder="Courier" value="{{ order.courier }}">
+        <input name="tracking_number" class="form-control mb-2" placeholder="AWB / tracking no." value="{{ order.tracking_number }}">
+        <button class="btn btn-ghost-tp w-100">Save tracking</button>
+      </form>
+      {% if order.eway_required %}<p class="small text-warning mt-2"><i class="bi bi-exclamation-triangle"></i> E-Way Bill required (&gt; ₹{{ RULES.EWAY_THRESHOLD|intcomma }}).</p>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

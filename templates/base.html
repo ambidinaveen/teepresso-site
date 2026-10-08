@@ -1,0 +1,183 @@
+{% load static humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ BRAND }} — {{ RULES.TAGLINE }}{% endblock %}</title>
+<meta name="description" content="{% block meta_desc %}{{ BRAND }} — corporate gifting & web-to-print. Customised t-shirts, caps, pens, keychains, notebooks & premium gift sets with your logo. PAN-India delivery.{% endblock %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+<link rel="stylesheet" href="{% static 'css/animations.css' %}">
+{% block head %}{% endblock %}
+</head>
+<body>
+{% block topbar %}
+<div style="background:var(--ink);color:#fff;font-size:.82rem;padding:7px 0;text-align:center;">
+  <i class="bi bi-truck"></i> Free shipping over ₹{{ RULES.FREE_SHIP_OVER }} · PAN-India delivery in {{ RULES.DELIVERY_DAYS }} ·
+  <a href="{% url 'quotations:request' %}" style="color:#fde68a;font-weight:600;">Bulk &amp; Corporate orders →</a>
+</div>
+{% endblock %}
+
+<nav class="tp-nav">
+  <div class="container-tp d-flex align-items-center gap-3 py-2">
+    <a href="{% url 'storefront:index' %}" class="tp-brand text-decoration-none">
+      <span class="tp-logo">T</span><span>{{ BRAND }}</span>
+    </a>
+
+    <div class="tp-search d-none d-lg-block" id="searchBox">
+      <i class="bi bi-search"></i>
+      <input type="text" id="liveSearch" autocomplete="off" placeholder="Search gifts, t-shirts, pens…">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <ul class="navbar-nav d-none d-lg-flex flex-row align-items-center gap-3 ms-auto mb-0">
+      <li class="nav-item dropdown mega position-static">
+        <a class="nav-link dropdown-toggle" href="{% url 'products:list' %}" role="button" data-bs-toggle="dropdown">Shop</a>
+        <div class="dropdown-menu">
+          <div class="row g-3">
+            {% for cat in nav_categories %}
+            <div class="col-6 col-md-3 mega-col">
+              <h6>{% if cat.icon %}<i class="bi bi-{{ cat.icon }}"></i> {% endif %}{{ cat.name }}</h6>
+              <a class="mega-link" href="{{ cat.get_absolute_url }}"><i class="bi bi-arrow-right-short"></i> All {{ cat.name }}</a>
+              {% for child in cat.children.all %}
+              <a class="mega-link" href="{{ child.get_absolute_url }}"><i class="bi bi-dot"></i> {{ child.name }}</a>
+              {% endfor %}
+            </div>
+            {% empty %}
+            <div class="col-12"><a class="mega-link" href="{% url 'products:list' %}">Browse all products →</a></div>
+            {% endfor %}
+          </div>
+        </div>
+      </li>
+      <li class="nav-item"><a class="nav-link" href="{% url 'quotations:request' %}">Corporate</a></li>
+      <li class="nav-item"><a class="nav-link" href="{% url 'blogs:list' %}">Blog</a></li>
+      <li class="nav-item"><a class="nav-link" href="{% url 'storefront:track' %}">Track</a></li>
+    </ul>
+
+    <div class="d-flex align-items-center gap-3 {% if not user.is_authenticated %}ms-auto ms-lg-0{% endif %}">
+      {% if user.is_authenticated %}
+        <div class="dropdown">
+          <a class="nav-icon dropdown-toggle text-decoration-none" data-bs-toggle="dropdown" href="#"><i class="bi bi-person-circle"></i></a>
+          <ul class="dropdown-menu dropdown-menu-end shadow">
+            <li class="px-3 py-1 small text-muted">Hi, {{ user.display_name }}</li><li><hr class="dropdown-divider"></li>
+            {% if user.is_staff_role or user.is_superuser %}
+            <li><a class="dropdown-item" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}"><i class="bi bi-grid"></i> My Account</a></li>
+            <li><a class="dropdown-item" href="{% url 'accounts:orders' %}"><i class="bi bi-bag"></i> My Orders</a></li>
+            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+          </ul>
+        </div>
+      {% else %}
+        <a class="nav-icon" href="{% url 'accounts:login' %}" title="Login"><i class="bi bi-person"></i></a>
+      {% endif %}
+      <a class="nav-icon" href="{% url 'accounts:wishlist' %}" title="Wishlist"><i class="bi bi-heart"></i>{% if wishlist_count %}<span class="badge-dot">{{ wishlist_count }}</span>{% endif %}</a>
+      <a class="nav-icon" href="{% url 'cart:detail' %}" title="Cart" id="cartIcon"><i class="bi bi-bag-fill"></i><span class="badge-dot" id="cartCount" {% if not cart_count %}style="display:none"{% endif %}>{{ cart_count }}</span></a>
+      <button class="btn p-0 nav-icon d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileNav"><i class="bi bi-list"></i></button>
+    </div>
+  </div>
+</nav>
+
+<!-- mobile offcanvas -->
+<div class="offcanvas offcanvas-end" id="mobileNav">
+  <div class="offcanvas-header"><h5 class="offcanvas-title">{{ BRAND }}</h5><button class="btn-close" data-bs-dismiss="offcanvas"></button></div>
+  <div class="offcanvas-body">
+    <a class="d-block py-2" href="{% url 'products:list' %}">Shop All</a>
+    {% for cat in nav_categories %}<a class="d-block py-2 text-muted" href="{{ cat.get_absolute_url }}">{{ cat.name }}</a>{% endfor %}
+    <hr>
+    <a class="d-block py-2" href="{% url 'quotations:request' %}">Corporate / Bulk</a>
+    <a class="d-block py-2" href="{% url 'blogs:list' %}">Blog</a>
+    <a class="d-block py-2" href="{% url 'storefront:track' %}">Track Order</a>
+    <a class="d-block py-2" href="{% url 'cms:faq' %}">FAQ</a>
+    <a class="d-block py-2" href="{% url 'cms:contact' %}">Contact</a>
+  </div>
+</div>
+
+{% if messages %}
+<div class="container-tp mt-3">
+  {% for m in messages %}
+  <div class="alert alert-{% if m.tags == 'error' %}danger{% elif m.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+    {{ m }}<button class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<footer class="tp-footer">
+  <div class="container-tp">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="tp-brand text-white mb-2"><span class="tp-logo">T</span><span>{{ BRAND }}</span></div>
+        <p class="small">{{ RULES.TAGLINE }}. Every gift tells a story — printed, packed & delivered across India.</p>
+        <div class="d-flex gap-2 mt-3">
+          <a class="soc" href="#"><i class="bi bi-facebook"></i></a>
+          <a class="soc" href="#"><i class="bi bi-instagram"></i></a>
+          <a class="soc" href="#"><i class="bi bi-linkedin"></i></a>
+          <a class="soc" href="#"><i class="bi bi-youtube"></i></a>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2"><h6>Shop</h6>
+        {% for cat in nav_categories %}<a href="{{ cat.get_absolute_url }}">{{ cat.name }}</a>{% endfor %}
+      </div>
+      <div class="col-6 col-lg-2"><h6>Company</h6>
+        <a href="{% url 'cms:page' 'about' %}">About Us</a>
+        <a href="{% url 'blogs:list' %}">Blog</a>
+        <a href="{% url 'quotations:request' %}">Corporate Gifting</a>
+        <a href="{% url 'cms:contact' %}">Contact</a>
+      </div>
+      <div class="col-6 col-lg-2"><h6>Help</h6>
+        <a href="{% url 'cms:faq' %}">FAQ</a>
+        <a href="{% url 'storefront:track' %}">Track Order</a>
+        <a href="{% url 'cms:page' 'shipping-policy' %}">Shipping</a>
+        <a href="{% url 'cms:page' 'privacy-policy' %}">Privacy Policy</a>
+        <a href="{% url 'cms:page' 'terms' %}">Terms</a>
+      </div>
+      <div class="col-6 col-lg-2"><h6>Newsletter</h6>
+        <p class="small">Gifting ideas & offers in your inbox.</p>
+        <form method="post" action="{% url 'cms:newsletter' %}" class="d-flex gap-1">{% csrf_token %}
+          <input type="email" name="email" class="form-control form-control-sm" placeholder="Email" required>
+          <button class="btn btn-grad btn-sm">→</button>
+        </form>
+      </div>
+    </div>
+    <hr class="border-secondary mt-4">
+    <div class="d-flex flex-wrap justify-content-between small">
+      <span>© {{ BRAND }}. All rights reserved.</span>
+      <span>Made in India 🇮🇳 · GST compliant invoicing</span>
+    </div>
+  </div>
+</footer>
+
+<!-- floating actions -->
+<a class="fab fab-wa" href="{{ support_wa }}" target="_blank" title="Chat on WhatsApp"><i class="bi bi-whatsapp"></i></a>
+<button class="fab fab-bot" id="botToggle" title="Ask Teebot"><i class="bi bi-robot"></i></button>
+<div class="chatbox" id="chatbox">
+  <div class="chat-head d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-robot"></i> Teebot — AI Assistant</span>
+    <button class="btn btn-sm text-white p-0" id="botClose"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <form class="chat-foot" id="chatForm">
+    <input type="text" id="chatInput" placeholder="Ask about products, delivery…" autocomplete="off">
+    <button type="submit"><i class="bi bi-send"></i></button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>AOS.init({ duration: 700, once: true });
+  window.TP = { searchUrl: "{% url 'products:live_search' %}", chatUrl: "{% url 'cms:chatbot' %}", csrf: "{{ csrf_token }}" };</script>
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/chatbot.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

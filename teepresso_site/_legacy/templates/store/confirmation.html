@@ -1,0 +1,41 @@
+{% extends "base_store.html" %}
+{% block title %}Order {{ order.order_no }}{% endblock %}
+{% block content %}
+<div style="max-width:640px;margin:40px auto;padding:0 24px;text-align:center;">
+  <div class="card">
+    <div style="font-size:42px;">✅</div>
+    <h1 style="font-size:24px;margin:8px 0;">Order received!</h1>
+    <p class="muted">Your order number is</p>
+    <div class="price" style="font-size:30px;margin:6px 0;">{{ order.order_no }}</div>
+    {% if order.design_preview %}
+    <div style="margin:14px auto;max-width:240px;background:var(--bg);border-radius:12px;padding:12px;">
+      <img src="{{ order.design_preview }}" alt="your design" style="max-width:100%;">
+      <small class="muted">Your design — our team will print exactly this.</small>
+    </div>
+    {% endif %}
+    {% if order.payment_status == 'enquiry' %}
+      <div class="alert info" style="margin:14px 0;">This is an <b>enquiry</b> — our team will message you on WhatsApp to confirm and collect payment. You haven't been charged.</div>
+    {% else %}
+      <span class="badge ok">Paid · ₹{{ order.total }}</span>
+    {% endif %}
+    <div class="hr"></div>
+    <div class="flex between"><span class="muted">Item</span><span>{{ order.design_summary }}</span></div>
+    <div class="flex between"><span class="muted">Quantity</span><span>{{ order.qty_total }} pcs</span></div>
+    <div class="flex between"><span class="muted">Total</span><b>₹{{ order.total }}</b></div>
+    <div class="flex between"><span class="muted">Delivery</span><span>{{ RULES.DELIVERY_DAYS }}</span></div>
+    {% if wa %}
+    <div class="alert {% if wa.status == 'sent' %}info{% else %}warn{% endif %}" style="margin-top:14px;text-align:left;">
+      {% if wa.status == 'sent' %}
+        ✅ Your bill has been sent to your WhatsApp ({{ wa.phone }}).
+      {% else %}
+        📲 Your bill is ready — tap to get it on WhatsApp:
+        <a href="{{ wa.wa_link }}" target="_blank" class="btn sm accent" style="margin-top:6px;">Get bill on WhatsApp</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    <a href="{% url 'storefront:bill' order.order_no %}" class="btn ghost block" style="margin-top:10px;">View / download bill</a>
+    <a href="{% url 'storefront:tracking_detail' order.order_no %}" class="btn block" style="margin-top:8px;">Track this order</a>
+    <a href="{% url 'storefront:index' %}" class="btn ghost block" style="margin-top:8px;">Back to store</a>
+  </div>
+</div>
+{% endblock %}

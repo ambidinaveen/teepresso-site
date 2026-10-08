@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Addresses — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section"><div class="row g-4">
+  <div class="col-lg-3">{% include 'partials/account_nav.html' with active='addresses' %}</div>
+  <div class="col-lg-9">
+    <h4 class="fw-bold mb-3">Addresses</h4>
+    <div class="row g-3 mb-4">
+      {% for a in addresses %}
+      <div class="col-md-6"><div class="card-tp p-3 h-100">
+        <div class="d-flex justify-content-between"><b>{{ a.label }} {% if a.is_default %}<span class="badge-soft">Default</span>{% endif %}</b>
+          <a href="{% url 'accounts:address_delete' a.id %}" class="text-danger small"><i class="bi bi-trash"></i></a></div>
+        <p class="small text-muted mb-0 mt-1">{{ a.full_name }} · {{ a.phone }}<br>{{ a.one_line }}</p>
+      </div></div>
+      {% empty %}<div class="col-12 text-muted">No saved addresses yet.</div>{% endfor %}
+    </div>
+    <div class="card-tp p-4" style="max-width:680px">
+      <h6 class="fw-bold mb-3">Add a new address</h6>
+      <form method="post">{% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-4"><label class="small fw-semibold">Label</label>{{ form.label }}</div>
+          <div class="col-md-4"><label class="small fw-semibold">Full name</label>{{ form.full_name }}</div>
+          <div class="col-md-4"><label class="small fw-semibold">Phone</label>{{ form.phone }}</div>
+          <div class="col-12"><label class="small fw-semibold">Address line 1</label>{{ form.line1 }}</div>
+          <div class="col-12"><label class="small fw-semibold">Address line 2</label>{{ form.line2 }}</div>
+          <div class="col-md-5"><label class="small fw-semibold">City</label>{{ form.city }}</div>
+          <div class="col-md-4"><label class="small fw-semibold">State</label>{{ form.state }}</div>
+          <div class="col-md-3"><label class="small fw-semibold">Pincode</label>{{ form.pincode }}</div>
+          <div class="col-12 form-check ms-2">{{ form.is_default }}<label class="form-check-label small">Set as default</label></div>
+        </div>
+        <button class="btn btn-grad mt-3">Save address</button>
+      </form>
+    </div>
+  </div>
+</div></div>
+{% endblock %}

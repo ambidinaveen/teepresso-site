@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Create account — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp">
+  <div class="auth-card card-tp p-4">
+    <div class="text-center mb-3"><div class="tp-logo mx-auto mb-2">T</div><h4 class="fw-bold">Create your account</h4><p class="text-muted small">Join {{ BRAND }} in seconds</p></div>
+    <form method="post">{% csrf_token %}
+      <label class="small fw-semibold">Full name</label>{{ form.full_name }}{{ form.full_name.errors }}
+      <label class="small fw-semibold mt-2">Email</label>{{ form.email }}{{ form.email.errors }}
+      <label class="small fw-semibold mt-2">Mobile number</label>{{ form.phone }}{{ form.phone.errors }}
+      <div class="row g-2 mt-1">
+        <div class="col-6"><label class="small fw-semibold">Password</label>{{ form.password }}</div>
+        <div class="col-6"><label class="small fw-semibold">Confirm</label>{{ form.confirm_password }}</div>
+      </div>
+      {{ form.confirm_password.errors }}{{ form.password.errors }}
+      <button class="btn btn-grad w-100 mt-3">Create account</button>
+    </form>
+    <p class="text-center small text-muted mt-3">Already have an account? <a href="{% url 'accounts:login' %}">Login</a></p>
+  </div>
+</div>
+{% endblock %}

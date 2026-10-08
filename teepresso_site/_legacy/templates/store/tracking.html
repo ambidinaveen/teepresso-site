@@ -1,0 +1,48 @@
+{% extends "base_store.html" %}
+{% block title %}Track order{% endblock %}
+{% block content %}
+<div style="max-width:760px;margin:30px auto;padding:0 24px;">
+  <div class="page-head"><h1>Track your order</h1></div>
+
+  <form method="post" action="{% url 'storefront:tracking' %}" class="card flex" style="gap:10px;">
+    {% csrf_token %}
+    <input class="input" name="order_no" placeholder="Enter order number e.g. TP-123456" value="{{ order.order_no|default:'' }}" style="flex:1;">
+    <button class="btn">Track</button>
+  </form>
+
+  {% if order %}
+  <div class="grid g-2" style="margin-top:18px;">
+    <div class="card">
+      <div class="flex between mb">
+        <b>{{ order.order_no }}</b>
+        <span class="badge {% if order.status == 'delivered' %}ok{% elif order.urgent %}danger{% else %}warn{% endif %}">{{ order.get_status_display }}</span>
+      </div>
+      <p class="muted" style="font-size:13px;">Estimated delivery: {{ RULES.DELIVERY_DAYS }} (standard)</p>
+      <div class="hr"></div>
+      <div class="timeline" style="margin-top:6px;">
+        {% for t in timeline %}
+        <div class="tl-item {% if t.done %}done{% elif t.active %}active{% endif %}">
+          <h4>{{ t.label }}</h4>
+          <small>{% if t.done %}Completed{% elif t.active %}In progress{% else %}Pending{% endif %}</small>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <div class="card mb">
+        <h3 style="font-size:14px;margin-bottom:8px;">Order summary</h3>
+        <div class="flex between"><span class="muted">Item</span><span>{{ order.design_summary }}</span></div>
+        <div class="flex between"><span class="muted">Quantity</span><span>{{ order.qty_total }} pcs</span></div>
+        <div class="flex between"><span class="muted">Total</span><b>₹{{ order.total }}</b></div>
+        <div class="flex between"><span class="muted">Payment</span>
+          <span class="badge {% if order.payment_status == 'paid' %}ok{% else %}warn{% endif %}">{{ order.get_payment_status_display }}</span></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;margin-bottom:8px;">Shipping to</h3>
+        <p style="font-size:13px;">{{ order.customer.name }}<br>{{ order.address|linebreaksbr }}</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

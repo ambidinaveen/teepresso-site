@@ -1,0 +1,50 @@
+{% extends "base_panel.html" %}
+{% block title %}Mockup Studio{% endblock %}
+{% block panel_name %}Design{% endblock %}
+{% block search %}Search requests…{% endblock %}
+{% block topbar_right %}<span class="badge muted">Files: editors only 🔒</span>{% endblock %}
+{% block nav %}
+  <div class="label">Queue</div>
+  <a href="{% url 'panels:editor_mockups' %}" class="nav-item active"><span class="ico">🎨</span> Customer Designs</a>
+{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Mockup Studio</h1><span class="sub">The exact design each customer arranged — text &amp; photos</span></div>
+
+<div class="grid g-3 mb">
+  <div class="card stat"><div class="k">Awaiting approval</div><div class="v" style="color:var(--warn);">{{ pending }}</div></div>
+  <div class="card stat"><div class="k">In production</div><div class="v" style="color:var(--ok);">{{ approved }}</div></div>
+  <div class="card stat"><div class="k">Showing</div><div class="v">{{ cards|length }}</div></div>
+</div>
+
+<div class="grid g-3">
+  {% for c in cards %}
+  <div class="card">
+    <div class="flex between mb">
+      <small class="muted">{{ c.o.order_no }}</small>
+      <span class="badge {% if c.o.status == 'production' %}ok{% elif c.o.status == 'new' %}warn{% else %}muted{% endif %}">{{ c.o.get_status_display }}</span>
+    </div>
+    <div class="mockup-frame {% if c.o.status == 'new' %}watermark{% endif %}" style="background:var(--bg);display:grid;place-items:center;min-height:170px;position:relative;">
+      {% if c.has_design %}
+        <img src="{{ c.o.design_preview }}" alt="design" style="max-width:100%;max-height:200px;">
+      {% else %}
+        <span class="muted" style="font-size:12px;">No custom design</span>
+      {% endif %}
+    </div>
+    <p style="font-size:13px;margin:10px 0 2px;"><b>{{ c.o.customer.name }}</b></p>
+    <small class="muted">+{{ c.o.customer.phone }} · {{ c.o.qty_total }} pcs</small>
+    <div class="flex" style="gap:6px;margin-top:10px;flex-wrap:wrap;">
+      <a class="btn sm ghost" href="{% url 'panels:order_detail' c.o.order_no %}">Open</a>
+      {% if c.o.status == 'new' %}
+        <a class="btn sm accent" href="{{ c.wa }}" target="_blank">Send on WhatsApp</a>
+        <form method="post" action="{% url 'panels:mockup_approve' c.o.order_no %}">{% csrf_token %}
+          <button class="btn sm" name="action" value="approve">Approve</button></form>
+      {% else %}
+        <span class="badge ok">✓ Approved</span>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}<p class="muted">No active orders. Place an order on the storefront to see its design here.</p>{% endfor %}
+</div>
+
+<div class="card mt"><div class="alert warn">🔒 Soft copies &amp; print-ready files are visible to editors only. Designs stay watermarked until approved on WhatsApp.</div></div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Corporate & Bulk Orders — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <div class="row g-5 align-items-center">
+    <div class="col-lg-5">
+      <span class="badge-soft">Corporate Gifting</span>
+      <h2 class="fw-bold mt-2">Bulk orders made <span class="text-grad">effortless</span></h2>
+      <p class="text-muted">Tell us what you need and our corporate team will send a custom proposal with the best bulk pricing, branding mockups and delivery timeline.</p>
+      <ul class="list-unstyled">
+        <li class="py-1"><i class="bi bi-check-circle-fill text-success"></i> Volume discounts up to 25%</li>
+        <li class="py-1"><i class="bi bi-check-circle-fill text-success"></i> Dedicated account manager</li>
+        <li class="py-1"><i class="bi bi-check-circle-fill text-success"></i> Free design mockups</li>
+        <li class="py-1"><i class="bi bi-check-circle-fill text-success"></i> GST invoice + E-Way Bill support</li>
+        <li class="py-1"><i class="bi bi-check-circle-fill text-success"></i> PAN-India delivery</li>
+      </ul>
+    </div>
+    <div class="col-lg-7">
+      <div class="card-tp p-4">
+        <h5 class="fw-bold mb-3">Request a Quotation</h5>
+        <form method="post" enctype="multipart/form-data">{% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6"><label class="small fw-semibold">Company name</label>{{ form.company_name }}</div>
+            <div class="col-md-6"><label class="small fw-semibold">Contact person</label>{{ form.contact_person }}</div>
+            <div class="col-md-6"><label class="small fw-semibold">Email</label>{{ form.email }}</div>
+            <div class="col-md-6"><label class="small fw-semibold">Phone</label>{{ form.phone }}</div>
+            <div class="col-12"><label class="small fw-semibold">Product requirement</label>{{ form.product_requirement }}</div>
+            <div class="col-md-6"><label class="small fw-semibold">Quantity</label>{{ form.quantity }}</div>
+            <div class="col-md-6"><label class="small fw-semibold">Budget</label>{{ form.budget }}</div>
+            <div class="col-12"><label class="small fw-semibold">Reference file (logo/artwork)</label>{{ form.reference_file }}</div>
+          </div>
+          {% if form.errors %}<div class="alert alert-danger mt-3 small">Please correct the highlighted fields.</div>{% endif %}
+          <button class="btn btn-grad w-100 mt-3">Submit request <i class="bi bi-send"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

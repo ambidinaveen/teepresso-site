@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Track Order — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <div class="mx-auto" style="max-width:760px">
+    <h2 class="fw-bold mb-3 text-center"><i class="bi bi-geo-alt text-grad"></i> Track Your Order</h2>
+    <form method="post" action="{% url 'storefront:track' %}" class="d-flex gap-2 mb-4">{% csrf_token %}
+      <input name="order_no" class="form-control" placeholder="Enter order number e.g. TP12345678" value="{{ order.order_no }}" required>
+      <button class="btn btn-grad px-4">Track</button>
+    </form>
+
+    {% if order %}
+    <div class="card-tp p-4">
+      <div class="d-flex justify-content-between flex-wrap mb-3">
+        <div><h5 class="fw-bold mb-0">{{ order.order_no }}</h5><span class="text-muted small">Placed {{ order.created_at|date:"d M Y" }}</span></div>
+        <span class="status-pill s-{{ order.status }}">{{ order.status_label }}</span>
+      </div>
+      {% if order.status != 'cancelled' %}
+      <div class="tl my-4">
+        {% for step in timeline %}
+        <div class="tl-step {% if step.done %}done{% elif step.active %}active{% endif %}">
+          <div class="tl-dot">{% if step.done %}<i class="bi bi-check"></i>{% else %}{{ forloop.counter }}{% endif %}</div>
+          <div class="tl-label">{{ step.label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<div class="alert alert-danger">This order was cancelled.</div>{% endif %}
+      {% if order.tracking_number %}<p class="small"><i class="bi bi-truck"></i> Courier: <b>{{ order.courier }}</b> · AWB: <b>{{ order.tracking_number }}</b></p>{% endif %}
+      <div class="mt-3"><b>Status history</b>
+        <ul class="list-unstyled small text-muted mt-2">
+          {% for e in order.events.all %}<li><i class="bi bi-dot"></i> {{ e.created_at|date:"d M, H:i" }} — {{ e.status|title }} {% if e.note %}· {{ e.note }}{% endif %}</li>{% endfor %}
+        </ul>
+      </div>
+      <a href="{% url 'orders:invoice' order.order_no %}" class="btn btn-ghost-tp btn-sm"><i class="bi bi-receipt"></i> Invoice</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

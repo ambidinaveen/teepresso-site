@@ -1,0 +1,15 @@
+<div class="card-tp p-3">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <div class="cat-ic" style="width:46px;height:46px;font-size:1.1rem">{{ user.display_name.0|upper }}</div>
+    <div><b>{{ user.display_name }}</b><div class="small text-muted">{{ user.email }}</div></div>
+  </div>
+  <nav class="nav flex-column small">
+    <a class="nav-link px-2 {% if active == 'dashboard' %}fw-bold text-grad{% endif %}" href="{% url 'accounts:dashboard' %}"><i class="bi bi-grid"></i> Dashboard</a>
+    <a class="nav-link px-2 {% if active == 'orders' %}fw-bold text-grad{% endif %}" href="{% url 'accounts:orders' %}"><i class="bi bi-bag"></i> My Orders</a>
+    <a class="nav-link px-2 {% if active == 'wishlist' %}fw-bold text-grad{% endif %}" href="{% url 'accounts:wishlist' %}"><i class="bi bi-heart"></i> Wishlist</a>
+    <a class="nav-link px-2 {% if active == 'designs' %}fw-bold text-grad{% endif %}" href="{% url 'products:my_designs' %}"><i class="bi bi-brush"></i> My Designs</a>
+    <a class="nav-link px-2 {% if active == 'addresses' %}fw-bold text-grad{% endif %}" href="{% url 'accounts:addresses' %}"><i class="bi bi-geo-alt"></i> Addresses</a>
+    <a class="nav-link px-2 {% if active == 'profile' %}fw-bold text-grad{% endif %}" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> Profile</a>
+    <a class="nav-link px-2 text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+  </nav>
+</div>

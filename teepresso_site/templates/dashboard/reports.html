@@ -1,0 +1,11 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Reports{% endblock %}{% block heading %}Reports & Exports{% endblock %}
+{% block dash %}
+<div class="row g-3">
+  <div class="col-md-6 col-lg-3"><a href="{% url 'dashboard:report_export' 'sales' %}" class="stat-card d-block text-decoration-none text-dark lift"><span class="ic mb-2" style="background:var(--grad)"><i class="bi bi-graph-up"></i></span><h6 class="fw-bold">Sales Report</h6><p class="small text-muted mb-0">All orders with status & totals (CSV)</p></a></div>
+  <div class="col-md-6 col-lg-3"><a href="{% url 'dashboard:report_export' 'gst' %}" class="stat-card d-block text-decoration-none text-dark lift"><span class="ic mb-2" style="background:#2563eb"><i class="bi bi-receipt"></i></span><h6 class="fw-bold">GST Report</h6><p class="small text-muted mb-0">Taxable, CGST/SGST, totals (CSV)</p></a></div>
+  <div class="col-md-6 col-lg-3"><a href="{% url 'dashboard:report_export' 'products' %}" class="stat-card d-block text-decoration-none text-dark lift"><span class="ic mb-2" style="background:#16a34a"><i class="bi bi-box-seam"></i></span><h6 class="fw-bold">Product Report</h6><p class="small text-muted mb-0">Sales & views per product (CSV)</p></a></div>
+  <div class="col-md-6 col-lg-3"><a href="{% url 'dashboard:report_export' 'customers' %}" class="stat-card d-block text-decoration-none text-dark lift"><span class="ic mb-2" style="background:#db2777"><i class="bi bi-people"></i></span><h6 class="fw-bold">Customer Report</h6><p class="small text-muted mb-0">Customers & order counts (CSV)</p></a></div>
+</div>
+<div class="stat-card mt-3"><p class="mb-0 small text-muted"><i class="bi bi-info-circle"></i> CSV opens directly in Excel/Google Sheets. {{ messages_count }} unread contact message(s).</p></div>
+{% endblock %}

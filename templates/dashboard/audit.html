@@ -1,0 +1,16 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Audit Log{% endblock %}{% block heading %}Audit & Activity{% endblock %}
+{% block dash %}
+<div class="row g-3">
+  <div class="col-lg-7"><div class="stat-card">
+    <h6 class="fw-bold mb-2">Activity log</h6>
+    <table class="table table-sm small mb-0"><thead><tr><th>When</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
+      <tbody>{% for l in logs %}<tr><td>{{ l.created_at|date:"d M H:i" }}</td><td>{{ l.user.display_name|default:"anon" }}</td><td>{{ l.action }}</td><td class="text-muted">{{ l.ip }}</td></tr>{% empty %}<tr><td colspan="4" class="text-muted">No activity recorded.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div></div>
+  <div class="col-lg-5"><div class="stat-card">
+    <h6 class="fw-bold mb-2">Notification log</h6>
+    {% for n in notifications %}<div class="d-flex justify-content-between small border-bottom py-1"><span><i class="bi bi-{% if n.channel == 'email' %}envelope{% elif n.channel == 'whatsapp' %}whatsapp{% else %}phone{% endif %}"></i> {{ n.recipient|truncatechars:24 }}</span><span class="badge-soft">{{ n.get_status_display }}</span></div>{% empty %}<p class="text-muted small">No notifications sent.</p>{% endfor %}
+  </div></div>
+</div>
+{% endblock %}

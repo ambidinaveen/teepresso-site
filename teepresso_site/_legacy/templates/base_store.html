@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Teepresso — Custom T-shirts{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+<nav class="store-nav">
+  <a href="{% url 'storefront:index' %}" class="brand" style="text-decoration:none;">
+    <div class="logo">T</div><div><b>Teepresso</b><small>Custom Tees</small></div>
+  </a>
+  <a href="{% url 'storefront:index' %}">Home</a>
+  <a href="{% url 'storefront:tracking' %}">Track Order</a>
+  <a href="{% url 'panels:login' %}" style="margin-left:auto;" class="btn ghost sm">Staff Login</a>
+</nav>
+
+{% if messages %}
+<div style="max-width:1100px;margin:14px auto 0;padding:0 24px;">
+  {% for m in messages %}
+    <div class="alert {% if m.tags == 'error' %}danger{% elif m.tags == 'success' %}info{% else %}warn{% endif %}" style="margin-bottom:8px;">{{ m }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<footer style="text-align:center;color:var(--ink-3);padding:40px 20px;font-size:12.5px;">
+  © Teepresso · Custom T-shirt printing · Delivered in {{ RULES.DELIVERY_DAYS }}
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ order.order_no }} — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section"><div class="row g-4">
+  <div class="col-lg-3">{% include 'partials/account_nav.html' with active='orders' %}</div>
+  <div class="col-lg-9">
+    <a href="{% url 'accounts:orders' %}" class="btn btn-link px-0"><i class="bi bi-arrow-left"></i> All orders</a>
+    <div class="card-tp p-4">
+      <div class="d-flex justify-content-between flex-wrap mb-3"><h4 class="fw-bold mb-0">{{ order.order_no }}</h4><span class="status-pill s-{{ order.status }}">{{ order.status_label }}</span></div>
+      {% if order.status != 'cancelled' %}
+      <div class="tl my-4">{% for step in timeline %}<div class="tl-step {% if step.done %}done{% elif step.active %}active{% endif %}"><div class="tl-dot">{% if step.done %}<i class="bi bi-check"></i>{% else %}{{ forloop.counter }}{% endif %}</div><div class="tl-label">{{ step.label }}</div></div>{% endfor %}</div>
+      {% endif %}
+      <div class="row">
+        <div class="col-md-7">
+          {% for it in order.items.all %}<div class="d-flex justify-content-between border-bottom py-2"><span>{{ it.name }} <span class="text-muted small">× {{ it.qty }}</span></span><span class="fw-semibold">₹{{ it.line_total|floatformat:0|intcomma }}</span></div>{% endfor %}
+          <div class="d-flex justify-content-between py-2 fw-bold fs-5"><span>Total</span><span>₹{{ order.total|floatformat:0|intcomma }}</span></div>
+        </div>
+        <div class="col-md-5">
+          <div class="card-tp p-3 small"><b>Shipping to</b><br>{{ order.full_name }}<br>{{ order.phone }}<br>{{ order.shipping_address|linebreaksbr }}</div>
+          {% if order.tracking_number %}<p class="small mt-2"><i class="bi bi-truck"></i> {{ order.courier }} · {{ order.tracking_number }}</p>{% endif %}
+        </div>
+      </div>
+      <div class="mt-3 d-flex gap-2"><a href="{% url 'orders:invoice' order.order_no %}" class="btn btn-ghost-tp btn-sm">Invoice</a><a href="{% url 'orders:track_order' order.order_no %}" class="btn btn-ghost-tp btn-sm">Track</a></div>
+    </div>
+  </div>
+</div></div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base_store.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div style="max-width:1000px;margin:24px auto;padding:0 24px;">
+  <div class="page-head"><h1>Checkout</h1><span class="sub">Delivery in {{ RULES.DELIVERY_DAYS }}</span></div>
+  <form method="post" action="{% url 'storefront:place_order' %}">
+    {% csrf_token %}
+    <div class="grid g-2">
+      <div>
+        <div class="card mb">
+          <h3 style="font-size:15px;margin-bottom:12px;">Your details</h3>
+          <div class="field"><label>Full name</label><input class="input" name="name" value="{{ customer.name|default:'' }}" required></div>
+          <div class="field"><label>Phone (WhatsApp)</label><input class="input" name="phone" value="{{ customer.phone|default:'' }}" required></div>
+          <div class="field"><label>Delivery address</label><textarea class="input" name="address" rows="3" required></textarea></div>
+        </div>
+
+        <div class="card mb">
+          <h3 style="font-size:15px;margin-bottom:10px;">Payment</h3>
+          {% if online_payments %}
+            <p class="muted" style="font-size:13px;">Pay securely via UPI / card / netbanking.</p>
+            <span class="badge ok">Online payments enabled</span>
+          {% else %}
+            <div class="alert info" style="margin-bottom:8px;">Online payment isn't switched on yet. Place your order as an <b>enquiry</b> — our team will contact you on WhatsApp to confirm and collect payment. <b>You won't be charged here.</b></div>
+            <span class="badge warn">Enquiry mode (safe)</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px;">Order summary</h3>
+          <div class="flex between mb"><div>
+            <b>{{ line.product.name }}</b><br><small class="muted">{{ line.quality.name }} · {{ line.color.name }}</small>
+          </div><b>{{ line.quote.qty }} pcs</b></div>
+          <div class="hr"></div>
+          {% for it in line.items %}
+          <div class="flex between"><span class="muted">{{ it.code }} × {{ it.qty }}</span></div>
+          {% endfor %}
+          <div class="hr"></div>
+          <div class="flex between"><span class="muted">Subtotal</span><span>₹{{ line.quote.subtotal }}</span></div>
+          {% if line.urgent %}<div class="flex between"><span class="muted">Urgent (+{{ RULES.URGENT_PCT }}%)</span><span>₹{{ line.quote.urgent_charge }}</span></div>{% endif %}
+          <div class="flex between"><span class="muted">GST ({{ RULES.GST_RATE }}%)</span><span>₹{{ line.quote.gst }}</span></div>
+          <div class="hr"></div>
+          <div class="flex between"><b>Total</b><b class="price" style="font-size:24px;">₹{{ line.quote.total }}</b></div>
+          {% if line.quote.bulk_followup %}<div class="alert warn" style="margin-top:10px;">Bulk order — our team will follow up to confirm.</div>{% endif %}
+          <button class="btn lg block accent" style="margin-top:14px;" type="submit">
+            {% if online_payments %}Pay ₹{{ line.quote.total }} →{% else %}Place order (enquiry) →{% endif %}
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

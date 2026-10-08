@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Blog — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <div class="text-center mb-4"><h2 class="fw-bold">Teepresso <span class="text-grad">Blog</span></h2><p class="text-muted">Corporate gifting trends, printing guides & marketing insights</p></div>
+  <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
+    <a href="{% url 'blogs:list' %}" class="btn btn-sm {% if not active_category %}btn-grad{% else %}btn-ghost-tp{% endif %}">All</a>
+    {% for c in categories %}<a href="?category={{ c.slug }}" class="btn btn-sm {% if active_category == c.slug %}btn-grad{% else %}btn-ghost-tp{% endif %}">{{ c.name }}</a>{% endfor %}
+  </div>
+  <div class="row g-4">
+    {% for post in posts %}
+    <div class="col-md-4" data-aos="fade-up">
+      <a class="card-tp d-block h-100 text-decoration-none text-dark" href="{{ post.get_absolute_url }}">
+        <div class="pc-img" style="aspect-ratio:16/9">{% if post.cover %}<img src="{{ post.cover.url }}" alt="">{% else %}<div class="d-grid h-100 align-content-center text-center text-muted"><i class="bi bi-journal-text fs-1"></i></div>{% endif %}</div>
+        <div class="p-3"><span class="badge-soft">{{ post.category.name|default:'Article' }}</span>
+          <h6 class="fw-bold mt-2">{{ post.title }}</h6><p class="small text-muted">{{ post.excerpt|truncatechars:110 }}</p>
+          <div class="small text-muted"><i class="bi bi-person"></i> {{ post.author }} · {{ post.created_at|date:"d M Y" }}</div></div>
+      </a>
+    </div>
+    {% empty %}<div class="col-12 text-center text-muted py-5">No articles yet.</div>{% endfor %}
+  </div>
+  {% if posts.has_other_pages %}
+  <nav class="mt-4"><ul class="pagination justify-content-center">
+    {% if posts.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ posts.previous_page_number }}">‹</a></li>{% endif %}
+    {% for n in posts.paginator.page_range %}<li class="page-item {% if n == posts.number %}active{% endif %}"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>{% endfor %}
+    {% if posts.has_next %}<li class="page-item"><a class="page-link" href="?page={{ posts.next_page_number }}">›</a></li>{% endif %}
+  </ul></nav>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Checkout — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <h2 class="fw-bold mb-4"><i class="bi bi-lock"></i> Checkout</h2>
+  <form method="post" action="{% url 'orders:checkout' %}">{% csrf_token %}
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card-tp p-4 mb-3">
+        <h6 class="fw-bold mb-3"><i class="bi bi-person"></i> Contact & Delivery</h6>
+        {% if addresses %}
+        <label class="small fw-semibold">Use a saved address</label>
+        <select class="form-select mb-3" onchange="if(this.value)document.getElementById('shipAddr').value=this.value">
+          <option value="">— New address —</option>
+          {% for a in addresses %}<option value="{{ a.one_line }}">{{ a.label }} · {{ a.one_line }}</option>{% endfor %}
+        </select>
+        {% endif %}
+        <div class="row g-3">
+          <div class="col-md-6"><label class="small fw-semibold">Full name *</label><input name="full_name" class="form-control" value="{{ prefill.full_name }}" required></div>
+          <div class="col-md-6"><label class="small fw-semibold">Phone *</label><input name="phone" class="form-control" value="{{ prefill.phone }}" required></div>
+          <div class="col-md-6"><label class="small fw-semibold">Email</label><input name="email" type="email" class="form-control" value="{{ prefill.email }}"></div>
+          <div class="col-md-6"><label class="small fw-semibold">Company (optional)</label><input name="company" class="form-control" value="{{ prefill.company }}"></div>
+          <div class="col-12"><label class="small fw-semibold">Shipping address *</label><textarea name="shipping_address" id="shipAddr" rows="3" class="form-control" required>{{ prefill.shipping_address }}</textarea></div>
+        </div>
+      </div>
+      <div class="card-tp p-4 mb-3">
+        <h6 class="fw-bold mb-3"><i class="bi bi-receipt"></i> GST details (optional)</h6>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="small fw-semibold">GSTIN</label><input name="gst_number" class="form-control" value="{{ prefill.gst_number }}"></div>
+          <div class="col-md-6"><label class="small fw-semibold">Billing address (if different)</label><input name="billing_address" class="form-control"></div>
+        </div>
+      </div>
+      <div class="card-tp p-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-credit-card"></i> Payment method</h6>
+        <div class="pay-picks">
+          {% if upi_on %}
+          <label class="pay-pick">
+            <input class="form-check-input" type="radio" name="payment_method" value="upi" checked>
+            <span class="pay-pick-body">
+              <span class="pay-pick-title"><i class="bi bi-phone text-grad"></i> UPI — PhonePe · Google Pay · Paytm</span>
+              <span class="pay-pick-sub">Scan a QR or tap to pay from any UPI app.</span>
+            </span>
+            <span class="pay-pick-tag">Recommended</span>
+          </label>
+          {% endif %}
+          <label class="pay-pick">
+            <input class="form-check-input" type="radio" name="payment_method" value="razorpay" {% if not upi_on %}checked{% endif %}>
+            <span class="pay-pick-body">
+              <span class="pay-pick-title"><i class="bi bi-credit-card-2-front text-grad"></i> Cards · Net Banking · UPI</span>
+              <span class="pay-pick-sub">Secured by Razorpay.</span>
+            </span>
+          </label>
+        </div>
+        {% if not razorpay_on and not upi_on %}<div class="alert alert-info mt-3 small mb-0"><i class="bi bi-shield-check"></i> Safe demo mode: no real payment is taken. You can simulate a payment or place the order as an enquiry — our team will collect payment.</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card-tp p-4" style="position:sticky;top:90px">
+        <h6 class="fw-bold mb-3">Order Summary</h6>
+        {% for it in items %}
+        <div class="d-flex justify-content-between small py-1"><span>{{ it.product.name|truncatechars:28 }} × {{ it.qty }}</span><span>₹{{ it.line_total|floatformat:0|intcomma }}</span></div>
+        {% endfor %}
+        <hr>
+        <div class="d-flex justify-content-between py-1"><span class="text-muted">Subtotal</span><span>₹{{ cart.subtotal|floatformat:0|intcomma }}</span></div>
+        {% if cart.discount %}<div class="d-flex justify-content-between py-1 text-success"><span>Discount</span><span>−₹{{ cart.discount|floatformat:0|intcomma }}</span></div>{% endif %}
+        <div class="d-flex justify-content-between py-1"><span class="text-muted">GST ({{ RULES.GST_RATE }}%)</span><span>₹{{ cart.gst|floatformat:0|intcomma }}</span></div>
+        <div class="d-flex justify-content-between py-1"><span class="text-muted">Shipping</span><span>{% if cart.shipping %}₹{{ cart.shipping|floatformat:0 }}{% else %}<span class="text-success">FREE</span>{% endif %}</span></div>
+        <hr>
+        <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>₹{{ cart.total|floatformat:0|intcomma }}</span></div>
+        <button class="btn btn-grad w-100 mt-3">Place Order <i class="bi bi-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base_panel.html" %}
+{% block title %}Manager — Inventory{% endblock %}
+{% block panel_name %}Manager{% endblock %}
+{% block search %}Search SKU…{% endblock %}
+{% block nav %}
+  <div class="label">Inventory</div>
+  <a href="{% url 'panels:manager_inventory' %}" class="nav-item active"><span class="ico">🗂️</span> Stock Overview</a>
+  <div class="label">Orders</div>
+  <a href="#order-status" class="nav-item"><span class="ico">📋</span> Order Status</a>
+  <a href="#offline" class="nav-item"><span class="ico">🧾</span> Offline Orders</a>
+{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Inventory &amp; Stock</h1><span class="sub">Manager view</span></div>
+{% if low_count %}<div class="alert warn" style="margin-bottom:14px;">{{ low_count }} SKU(s) at/below reorder level — consider restocking.</div>{% endif %}
+
+<div class="grid g-2 mb">
+  <div class="card pad-0">
+    <div class="card-head" style="padding:16px 16px 0;"><h3>Inventory</h3></div>
+    <table class="table">
+      <tr><th>SKU</th><th>In Stock</th><th>Reorder</th><th>Status</th></tr>
+      {% for i in items %}
+      <tr><td><b>{{ i.sku }}</b></td><td>{{ i.in_stock }}</td><td>{{ i.reorder_level }}</td>
+        <td><span class="badge {% if i.status == 'in' %}ok{% elif i.status == 'low' %}warn{% else %}danger{% endif %}">{{ i.status|upper }}</span></td></tr>
+      {% empty %}<tr><td colspan="4" class="muted" style="padding:18px;">No stock items — run seed.</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div>
+    <div class="card mb">
+      <h3 style="font-size:15px;margin-bottom:10px;">Stock In / Out</h3>
+      <form method="post" action="{% url 'panels:stock_action' %}">
+        {% csrf_token %}
+        <div class="field"><label>SKU</label>
+          <select name="item_id" class="input">{% for i in items %}<option value="{{ i.id }}">{{ i.sku }} ({{ i.in_stock }})</option>{% endfor %}</select></div>
+        <div class="row">
+          <div class="field"><label>Quantity</label><input class="input" name="qty" type="number" min="1" value="50"></div>
+        </div>
+        <div class="flex" style="gap:8px;">
+          <button class="btn sm accent" name="kind" value="in">Stock In</button>
+          <button class="btn sm ghost" name="kind" value="out">Stock Out</button>
+        </div>
+      </form>
+    </div>
+    <div class="card pad-0">
+      <div class="card-head" style="padding:14px 14px 0;"><h3>Recent movements</h3></div>
+      <table class="table">
+        <tr><th>Type</th><th>SKU</th><th>Qty</th><th>By</th><th>Time</th></tr>
+        {% for mv in movements %}
+        <tr><td><span class="badge {% if mv.kind == 'in' %}ok{% else %}warn{% endif %}">{{ mv.kind|upper }}</span></td>
+          <td>{{ mv.item.sku }}</td><td>{{ mv.qty }}</td><td>{{ mv.by.username|default:'—' }}</td><td><small class="muted">{{ mv.ts|timesince }} ago</small></td></tr>
+        {% empty %}<tr><td colspan="5" class="muted" style="padding:16px;">No movements yet.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="grid g-2">
+  <div class="card pad-0" id="offline">
+    <div class="card-head" style="padding:16px 16px 0;"><h3>Offline Orders (QR + auto-bill)</h3></div>
+    <div style="padding:0 16px 12px;">
+      <form method="post" action="{% url 'panels:offline_order' %}" class="flex" style="gap:8px;flex-wrap:wrap;">
+        {% csrf_token %}
+        <input class="input" name="name" placeholder="Customer" style="flex:1;min-width:120px;">
+        <input class="input" name="phone" placeholder="Phone" style="flex:1;min-width:120px;">
+        <input class="input" name="qty" type="number" placeholder="Qty" min="1" style="width:90px;">
+        <button class="btn sm accent">Create + QR bill</button>
+      </form>
+    </div>
+    <table class="table">
+      <tr><th>Order</th><th>Customer</th><th>Qty</th><th>Status</th><th>Bill</th></tr>
+      {% for o in offline_orders %}
+      <tr><td><b>{{ o.order_no }}</b></td><td>{{ o.customer.name }}</td><td>{{ o.qty_total }}</td>
+        <td><span class="badge muted">{{ o.get_status_display }}</span></td>
+        <td class="flex" style="gap:6px;">
+          <a class="btn sm ghost" href="{% url 'storefront:bill' o.order_no %}" target="_blank">Bill</a>
+          {% with m=o.messages.first %}{% if m %}<a class="btn sm accent" href="{{ m.wa_link }}" target="_blank">WhatsApp</a>{% endif %}{% endwith %}
+        </td></tr>
+      {% empty %}<tr><td colspan="5" class="muted" style="padding:16px;">No offline orders.</td></tr>{% endfor %}
+    </table>
+  </div>
+
+  <div class="card pad-0" id="order-status">
+    <div class="card-head" style="padding:16px 16px 0;"><h3>Order Status (read-only)</h3></div>
+    <div style="padding:0 16px;"><div class="alert info">Managers see quantity &amp; status only — no prices or customer contact.</div></div>
+    <table class="table">
+      <tr><th>Order</th><th>Qty</th><th>Status</th></tr>
+      {% for o in order_status %}
+      <tr><td><b>{{ o.order_no }}</b></td><td>{{ o.qty_total }}</td>
+        <td><span class="badge muted">{{ o.status|capfirst }}</span></td></tr>
+      {% empty %}<tr><td colspan="3" class="muted" style="padding:16px;">No orders.</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}

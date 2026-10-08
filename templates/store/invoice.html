@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Invoice {{ invoice.invoice_no }} — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <div class="card-tp p-4 mx-auto" style="max-width:800px" id="invoice">
+    <div class="d-flex justify-content-between align-items-start">
+      <div><div class="tp-brand"><span class="tp-logo">T</span><span>{{ BRAND }}</span></div><p class="small text-muted mb-0 mt-1">{{ RULES.TAGLINE }}<br>GST Invoice · {{ RULES.SUPPORT_EMAIL }}</p></div>
+      <div class="text-end"><h5 class="fw-bold mb-0">TAX INVOICE</h5><div class="small text-muted">{{ invoice.invoice_no }}<br>{{ order.created_at|date:"d M Y" }}</div></div>
+    </div>
+    <hr>
+    <div class="row small">
+      <div class="col-6"><b>Bill To</b><br>{{ order.full_name }}<br>{{ order.phone }}<br>{% if order.company %}{{ order.company }}<br>{% endif %}{% if order.gst_number %}GSTIN: {{ order.gst_number }}<br>{% endif %}{{ order.billing_address|linebreaksbr }}</div>
+      <div class="col-6 text-end"><b>Ship To</b><br>{{ order.shipping_address|linebreaksbr }}</div>
+    </div>
+    <table class="table mt-3"><thead><tr><th>Item</th><th>Qty</th><th class="text-end">Rate</th><th class="text-end">Amount</th></tr></thead>
+      <tbody>{% for it in order.items.all %}<tr><td>{{ it.name }}{% if it.variant_label %} <span class="text-muted small">({{ it.variant_label }})</span>{% endif %}</td><td>{{ it.qty }}</td><td class="text-end">₹{{ it.unit_price|floatformat:2|intcomma }}</td><td class="text-end">₹{{ it.line_total|floatformat:2|intcomma }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <div class="row"><div class="col-7"></div><div class="col-5">
+      <div class="d-flex justify-content-between small py-1"><span>Taxable value</span><span>₹{{ taxable|floatformat:2|intcomma }}</span></div>
+      {% if order.discount %}<div class="d-flex justify-content-between small py-1 text-success"><span>Discount</span><span>−₹{{ order.discount|floatformat:2|intcomma }}</span></div>{% endif %}
+      <div class="d-flex justify-content-between small py-1"><span>CGST</span><span>₹{{ cgst|floatformat:2|intcomma }}</span></div>
+      <div class="d-flex justify-content-between small py-1"><span>SGST</span><span>₹{{ sgst|floatformat:2|intcomma }}</span></div>
+      <div class="d-flex justify-content-between small py-1"><span>Shipping</span><span>₹{{ order.shipping|floatformat:2|intcomma }}</span></div>
+      <hr class="my-1"><div class="d-flex justify-content-between fw-bold"><span>Grand Total</span><span>₹{{ order.total|floatformat:2|intcomma }}</span></div>
+    </div></div>
+    {% if order.eway_required %}<p class="small text-muted mt-2"><i class="bi bi-info-circle"></i> Order value exceeds ₹{{ RULES.EWAY_THRESHOLD|intcomma }} — E-Way Bill applicable.</p>{% endif %}
+    <p class="small text-center text-muted mt-3">This is a computer-generated invoice. Thank you for choosing {{ BRAND }}!</p>
+  </div>
+  <div class="text-center mt-3"><button class="btn btn-grad" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save PDF</button></div>
+</div>
+{% endblock %}

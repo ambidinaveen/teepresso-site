@@ -1,0 +1,18 @@
+/* Teepresso — responsive overrides (mobile-first polish) */
+@media (max-width: 991px) {
+  .mega .dropdown-menu { width: 100%; }
+  .dash-side { position: fixed; left: -260px; transition: .3s; z-index: 1060; }
+  .dash-side.show { left: 0; }
+  .dash-main { padding: 18px; }
+  .hero-slide { padding: 30px; min-height: 340px; }
+}
+@media (max-width: 767px) {
+  .section { padding: 40px 0; }
+  .tp-search { display: none; }
+  .stat-num { font-size: 1.4rem; }
+  .hero-slide h1 { font-size: 1.6rem; }
+  .chatbox { right: 10px; left: 10px; width: auto; }
+}
+@media (max-width: 575px) {
+  .fab-wa { bottom: 84px; }
+}

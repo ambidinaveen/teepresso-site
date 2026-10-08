@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}{{ page.title }} — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <div class="mx-auto card-tp p-4 p-md-5" style="max-width:860px">
+    <h1 class="fw-bold mb-3">{{ page.title }}</h1>
+    <div class="lh-lg">{{ page.body|safe }}</div>
+    <p class="small text-muted mt-4">Last updated {{ page.updated_at|date:"d M Y" }}</p>
+  </div>
+</div>
+{% endblock %}

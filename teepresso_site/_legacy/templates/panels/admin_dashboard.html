@@ -1,0 +1,77 @@
+{% extends "base_panel.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block panel_name %}Admin{% endblock %}
+{% block search %}Search orders, customers…{% endblock %}
+{% block nav %}
+  <div class="label">Overview</div>
+  <a href="{% url 'panels:admin_dashboard' %}" class="nav-item active"><span class="ico">📊</span> Dashboard</a>
+  <a href="{% url 'panels:order_management' %}" class="nav-item"><span class="ico">📦</span> Orders</a>
+  <div class="label">Operations</div>
+  <a href="{% url 'panels:manager_inventory' %}" class="nav-item"><span class="ico">🗂️</span> Inventory</a>
+  <a href="{% url 'panels:editor_mockups' %}" class="nav-item"><span class="ico">🎨</span> Mockups</a>
+  <a href="{% url 'panels:dispatch' %}" class="nav-item"><span class="ico">🚚</span> Dispatch</a>
+  <div class="label">System</div>
+  <a href="/django-admin/" class="nav-item"><span class="ico">⚙️</span> Settings &amp; Rules</a>
+{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Dashboard</h1><span class="sub">Business overview</span></div>
+{% if bulk_count %}<div class="alert warn" style="margin-bottom:16px;">📞 {{ bulk_count }} bulk order(s) (&gt;{{ RULES.BULK_FOLLOWUP_QTY }} pcs) flagged for manual follow-up.</div>{% endif %}
+
+<div class="grid g-4 mb">
+  <div class="card stat"><div class="ico" style="background:var(--brand-soft);color:var(--brand);">₹</div><div class="k">Revenue</div><div class="v">₹{{ revenue }}</div></div>
+  <div class="card stat"><div class="ico" style="background:var(--info-soft);color:var(--info);">📦</div><div class="k">Orders</div><div class="v">{{ order_count }}</div></div>
+  <div class="card stat"><div class="ico" style="background:var(--ok-soft);color:var(--ok);">📈</div><div class="k">Net Profit*</div><div class="v">₹{{ net_profit }}</div></div>
+  <div class="card stat"><div class="ico" style="background:var(--accent-soft);color:var(--accent);">🧮</div><div class="k">Avg Order Value</div><div class="v">₹{{ aov }}</div></div>
+</div>
+
+<div class="grid g-2 mb">
+  <div class="card">
+    <div class="card-head"><h3>Monthly Sales</h3></div>
+    <div class="flex" style="align-items:flex-end;gap:14px;height:160px;">
+      {% for m in months %}
+      <div style="flex:1;text-align:center;">
+        <div style="background:var(--brand);border-radius:6px 6px 0 0;height:{% widthratio m.total max_month 140 %}px;"></div>
+        <small class="muted">{{ m.label }}</small>
+      </div>
+      {% empty %}<p class="muted">No sales yet.</p>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Profit &amp; Loss</h3><span class="badge muted" style="margin-left:auto;">*estimate</span></div>
+    <div class="flex between"><span class="muted">Revenue</span><b>₹{{ revenue }}</b></div>
+    <div class="flex between"><span class="muted">COGS (55%)</span><span>₹{{ cogs }}</span></div>
+    <div class="flex between"><span class="muted">Operating (18%)</span><span>₹{{ opex }}</span></div>
+    <div class="hr"></div>
+    <div class="flex between"><b>Net Profit</b><b style="color:var(--ok);">₹{{ net_profit }}</b></div>
+    <p class="muted" style="font-size:11px;margin-top:8px;">*Cost ratios are placeholders until real cost data is entered.</p>
+  </div>
+</div>
+
+<div class="grid g-2">
+  <div class="card pad-0">
+    <div class="card-head" style="padding:16px 16px 0;"><h3>Recent Orders</h3><a class="link" href="{% url 'panels:order_management' %}">View all</a></div>
+    <table class="table">
+      <tr><th>Order</th><th>Customer</th><th>Qty</th><th>Amount</th><th>Payment</th><th>Status</th></tr>
+      {% for o in recent_orders %}
+      <tr>
+        <td><b>{{ o.order_no }}</b> {% if o.urgent %}<span class="badge danger">URGENT</span>{% endif %}</td>
+        <td>{{ o.customer.name }}</td><td>{{ o.qty_total }}</td><td>₹{{ o.total }}</td>
+        <td><span class="badge {% if o.payment_status == 'paid' %}ok{% else %}warn{% endif %}">{{ o.get_payment_status_display }}</span></td>
+        <td><span class="badge muted">{{ o.get_status_display }}</span></td>
+      </tr>
+      {% empty %}<tr><td colspan="6" class="muted" style="padding:18px;">No orders yet.</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card pad-0">
+    <div class="card-head" style="padding:16px 16px 0;"><h3>Attendance — Today</h3></div>
+    <table class="table">
+      <tr><th>Name</th><th>Login</th><th>Logout</th><th>Status</th></tr>
+      {% for a in attendance %}
+      <tr><td>{{ a.user.username }}</td><td>{{ a.login_ts|time:"H:i" }}</td>
+        <td>{% if a.logout_ts %}{{ a.logout_ts|time:"H:i" }}{% else %}—{% endif %}</td>
+        <td><span class="badge {% if a.logout_ts %}muted{% else %}ok{% endif %}">{{ a.status }}</span></td></tr>
+      {% empty %}<tr><td colspan="4" class="muted" style="padding:18px;">No logins recorded today.</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}

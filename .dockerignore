@@ -1,0 +1,24 @@
+# Teepresso — keep the build context (and final image) lean
+_legacy/
+**/__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.venv/
+venv/
+env/
+db.sqlite3
+*.sqlite3
+staticfiles/
+media/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.md
+!README.md
+node_modules/

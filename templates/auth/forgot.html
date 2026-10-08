@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Reset password — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp">
+  <div class="auth-card card-tp p-4">
+    <div class="text-center mb-3"><i class="bi bi-shield-lock fs-1 text-grad"></i><h4 class="fw-bold mt-2">Reset password</h4></div>
+    {% if stage == 'verify' %}
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="stage" value="verify"><input type="hidden" name="identifier" value="{{ ident }}">
+      <p class="small text-muted">Enter the code sent to <b>{{ ident }}</b> and choose a new password.</p>
+      {% if dev_otp %}<div class="alert alert-info small">Demo mode code: <b>{{ dev_otp }}</b></div>{% endif %}
+      <label class="small fw-semibold">Reset code</label><input name="code" class="form-control" required>
+      <label class="small fw-semibold mt-2">New password</label><input name="password" type="password" class="form-control" minlength="6" required>
+      <button class="btn btn-grad w-100 mt-3">Update password</button>
+    </form>
+    {% else %}
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="stage" value="request">
+      <label class="small fw-semibold">Email or mobile</label><input name="identifier" class="form-control" value="{{ ident }}" required>
+      <button class="btn btn-grad w-100 mt-3">Send reset code</button>
+    </form>
+    {% endif %}
+    <p class="text-center small text-muted mt-3"><a href="{% url 'accounts:login' %}">Back to login</a></p>
+  </div>
+</div>
+{% endblock %}

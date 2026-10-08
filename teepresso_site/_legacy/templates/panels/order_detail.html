@@ -1,0 +1,93 @@
+{% extends "base_panel.html" %}
+{% block title %}{{ order.order_no }}{% endblock %}
+{% block panel_name %}{% if request.user.role == 'editor' %}Design{% else %}Admin{% endif %}{% endblock %}
+{% block search %}Order {{ order.order_no }}{% endblock %}
+{% block nav %}
+  {% if request.user.role == 'editor' %}
+    <div class="label">Queue</div>
+    <a href="{% url 'panels:editor_mockups' %}" class="nav-item"><span class="ico">🎨</span> Customer Designs</a>
+  {% else %}
+    <div class="label">Overview</div>
+    <a href="{% url 'panels:admin_dashboard' %}" class="nav-item"><span class="ico">📊</span> Dashboard</a>
+    <a href="{% url 'panels:order_management' %}" class="nav-item active"><span class="ico">📦</span> Orders</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ order.order_no }}</h1>
+  <span class="sub">{{ order.created_at|date:"d M Y H:i" }}</span>
+  {% if order.urgent %}<span class="badge danger">URGENT</span>{% endif %}
+  {% if order.is_bulk %}<span class="badge warn">BULK</span>{% endif %}
+</div>
+
+<div class="grid g-2">
+  <!-- The customer's exact design -->
+  <div class="card">
+    <div class="card-head"><h3>Customer's design</h3>
+      {% if order.status == 'new' %}<span class="badge warn" style="margin-left:auto;">Watermark until approval</span>{% endif %}</div>
+    <div class="mockup-frame {% if order.status == 'new' %}watermark{% endif %}" style="background:var(--bg);display:grid;place-items:center;min-height:280px;position:relative;">
+      {% if order.design_preview %}
+        <img src="{{ order.design_preview }}" alt="design" style="max-width:100%;max-height:340px;">
+      {% else %}<span class="muted">No custom design submitted.</span>{% endif %}
+    </div>
+    {% if text_items %}
+    <div class="mt">
+      <b style="font-size:13px;">Text on the design</b>
+      <table class="table" style="margin-top:6px;">
+        <tr><th>Text</th><th>Font</th><th>Size</th><th>Colour</th></tr>
+        {% for t in text_items %}
+        <tr><td><b>{{ t.text }}</b></td><td>{{ t.font }}</td><td>{{ t.size }}px</td>
+          <td><span class="swatch" style="width:18px;height:18px;display:inline-block;background:{{ t.color }};"></span> {{ t.color }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% endif %}
+    {% if order.design_preview %}<a class="btn sm ghost mt" href="{{ order.design_preview }}" download="{{ order.order_no }}-design.png">⬇ Download design image</a>{% endif %}
+  </div>
+
+  <!-- Order facts -->
+  <div>
+    <div class="card mb">
+      <div class="card-head"><h3>Order</h3></div>
+      <div class="flex between"><span class="muted">Product</span><span>{{ order.design_summary }}</span></div>
+      <div class="flex between"><span class="muted">Sizes</span><span>{% for it in items %}{{ it.size.code }}×{{ it.qty }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></div>
+      <div class="flex between"><span class="muted">Total qty</span><b>{{ order.qty_total }} pcs</b></div>
+      <div class="flex between"><span class="muted">Status</span><span class="badge muted">{{ order.get_status_display }}</span></div>
+    </div>
+    {% if request.user.role != 'editor' %}
+    <div class="card mb">
+      <div class="card-head"><h3>Customer &amp; payment</h3></div>
+      <div class="flex between"><span class="muted">Name</span><span>{{ order.customer.name }}</span></div>
+      <div class="flex between"><span class="muted">Phone</span><span>{{ order.customer.phone }}</span></div>
+      <div class="flex between"><span class="muted">Address</span><span style="text-align:right;max-width:60%;">{{ order.address }}</span></div>
+      <div class="hr"></div>
+      <div class="flex between"><span class="muted">Subtotal</span><span>₹{{ order.subtotal }}</span></div>
+      {% if order.urgent %}<div class="flex between"><span class="muted">Urgent</span><span>₹{{ order.urgent_charge }}</span></div>{% endif %}
+      <div class="flex between"><span class="muted">GST</span><span>₹{{ order.gst }}</span></div>
+      <div class="flex between"><b>Total</b><b>₹{{ order.total }}</b></div>
+      <div class="flex between mt"><span class="muted">Payment</span><span class="badge {% if order.payment_status == 'paid' %}ok{% else %}warn{% endif %}">{{ order.get_payment_status_display }}</span></div>
+      {% if order.needs_eway %}<div class="alert warn" style="margin-top:8px;">Value &gt; ₹{{ eway_threshold }} — E-Way Bill required at dispatch.</div>{% endif %}
+    </div>
+
+    <div class="card mb">
+      <div class="card-head"><h3>WhatsApp bill</h3>
+        {% if bill_msg %}<span class="badge {% if bill_msg.status == 'sent' %}ok{% elif bill_msg.status == 'failed' %}danger{% else %}warn{% endif %}" style="margin-left:auto;">{{ bill_msg.get_status_display }}</span>{% endif %}</div>
+      {% if bill_msg %}
+        {% if bill_msg.status == 'sent' %}
+          <p class="muted" style="font-size:13px;">Bill sent automatically to {{ bill_msg.phone }}.</p>
+        {% else %}
+          <p class="muted" style="font-size:13px;">Bill is ready. Send it with one click (safe — no API needed):</p>
+          <a href="{{ bill_msg.wa_link }}" target="_blank" class="btn sm accent">Send bill on WhatsApp</a>
+        {% endif %}
+      {% else %}
+        <p class="muted" style="font-size:13px;">No bill generated yet.</p>
+      {% endif %}
+      <div class="flex" style="gap:6px;margin-top:8px;">
+        <a class="btn sm ghost" href="{% url 'storefront:bill' order.order_no %}" target="_blank">View bill</a>
+        <form method="post" action="{% url 'panels:send_bill' order.order_no %}">{% csrf_token %}
+          <button class="btn sm ghost" name="resend" value="1">Regenerate &amp; send</button></form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

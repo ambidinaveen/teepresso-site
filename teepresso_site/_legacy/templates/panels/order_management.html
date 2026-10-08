@@ -1,0 +1,82 @@
+{% extends "base_panel.html" %}
+{% block title %}Order Management{% endblock %}
+{% block panel_name %}Operations{% endblock %}
+{% block search %}Search orders…{% endblock %}
+{% block topbar_right %}<span class="badge ok" id="live"><span class="dot"></span> Live</span>{% endblock %}
+{% block nav %}
+  <div class="label">Overview</div>
+  <a href="{% url 'panels:admin_dashboard' %}" class="nav-item"><span class="ico">📊</span> Dashboard</a>
+  <a href="{% url 'panels:order_management' %}" class="nav-item active"><span class="ico">📦</span> Orders</a>
+  <div class="label">Operations</div>
+  <a href="{% url 'panels:manager_inventory' %}" class="nav-item"><span class="ico">🗂️</span> Inventory</a>
+  <a href="{% url 'panels:editor_mockups' %}" class="nav-item"><span class="ico">🎨</span> Mockups</a>
+  <a href="{% url 'panels:dispatch' %}" class="nav-item"><span class="ico">🚚</span> Dispatch</a>
+{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Order Management</h1><span class="sub">Live — new orders appear automatically</span></div>
+
+{% if stats.urgent %}<div class="alert danger" style="margin-bottom:10px;">🚨 High Alert — {{ stats.urgent }} urgent order(s) need priority handling.</div>{% endif %}
+{% if stats.bulk %}<div class="alert warn" style="margin-bottom:14px;">📞 {{ stats.bulk }} bulk order(s) (&gt;{{ RULES.BULK_FOLLOWUP_QTY }} pcs) flagged for manual call/email follow-up.</div>{% endif %}
+
+<div class="grid g-4 mb">
+  <div class="card stat"><div class="k">New</div><div class="v">{{ stats.new }}</div></div>
+  <div class="card stat"><div class="k">Urgent</div><div class="v" style="color:var(--danger);">{{ stats.urgent }}</div></div>
+  <div class="card stat"><div class="k">Bulk &gt;{{ RULES.BULK_FOLLOWUP_QTY }}</div><div class="v" style="color:var(--warn);">{{ stats.bulk }}</div></div>
+  <div class="card stat"><div class="k">Awaiting QC</div><div class="v">{{ stats.qc }}</div></div>
+</div>
+
+<div class="chips mb">
+  <a href="?filter=all" class="chip {% if filter == 'all' %}active{% endif %}">All</a>
+  <a href="?filter=new" class="chip {% if filter == 'new' %}active{% endif %}">New</a>
+  <a href="?filter=urgent" class="chip {% if filter == 'urgent' %}active{% endif %}">Urgent</a>
+  <a href="?filter=bulk" class="chip {% if filter == 'bulk' %}active{% endif %}">Bulk</a>
+  <a href="?filter=production" class="chip {% if filter == 'production' %}active{% endif %}">Production</a>
+  <a href="?filter=qc" class="chip {% if filter == 'qc' %}active{% endif %}">QC</a>
+  <a href="?filter=dispatched" class="chip {% if filter == 'dispatched' %}active{% endif %}">Dispatched</a>
+</div>
+
+<div class="card pad-0">
+  <table class="table">
+    <tr><th>Order #</th><th>Customer</th><th>Item</th><th>Qty</th><th>Value</th><th>Channel</th><th>Placed</th><th>Status</th><th>Action</th></tr>
+    {% for o in orders %}
+    <tr {% if o.urgent %}style="background:#FFF6F4;"{% endif %}>
+      <td {% if o.urgent %}style="border-left:3px solid var(--danger);"{% endif %}>
+        <div class="flex" style="gap:8px;">
+          {% if o.design_preview %}<a href="{% url 'panels:order_detail' o.order_no %}"><img src="{{ o.design_preview }}" style="width:34px;height:40px;object-fit:contain;background:var(--bg);border-radius:6px;"></a>{% endif %}
+          <div>
+            <a href="{% url 'panels:order_detail' o.order_no %}"><b>{{ o.order_no }}</b></a><br>
+            {% if o.urgent %}<span class="badge danger">URGENT</span>{% endif %}
+            {% if o.is_bulk %}<span class="badge warn">BULK</span>{% endif %}
+          </div>
+        </div>
+      </td>
+      <td>{{ o.customer.name }}</td>
+      <td><small>{{ o.design_summary }}</small></td>
+      <td>{{ o.qty_total }}</td>
+      <td>₹{{ o.total }}</td>
+      <td><span class="badge {% if o.channel == 'online' %}info{% else %}muted{% endif %}">{{ o.get_channel_display }}</span></td>
+      <td><small class="muted">{{ o.created_at|timesince }} ago</small></td>
+      <td><span class="badge muted">{{ o.get_status_display }}</span></td>
+      <td>
+        <form method="post" action="{% url 'panels:update_status' o.order_no %}" class="flex" style="gap:4px;">
+          {% csrf_token %}
+          <select name="status" class="input" style="padding:4px 6px;font-size:12px;width:auto;">
+            {% for val, lbl in statuses %}<option value="{{ val }}" {% if o.status == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+          </select>
+          <button class="btn sm">Set</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="9" class="muted" style="padding:20px;">No orders match this filter.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+// Near-real-time: poll the order count; reload when it changes (REQ-OM-2)
+let last={{ orders|length }};
+setInterval(()=>{ fetch("{% url 'panels:orders_api' %}").then(r=>r.json()).then(d=>{
+  if(d.count!==last){ last=d.count; location.reload(); }
+}); }, 5000);
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+# Teepresso — Python dependencies
+Django>=5.2,<6.1
+Pillow>=10.0                # ImageField (product/category/banner images)
+qrcode>=7.4                 # UPI QR codes (rendered server-side, offline)
+python-dotenv>=1.0
+whitenoise>=6.6            # compressed static serving
+
+# Production / Docker (Linux):
+gunicorn>=22.0            # WSGI server
+psycopg2-binary>=2.9      # PostgreSQL driver
+redis>=5.0               # cache + Celery broker
+celery>=5.4              # async jobs (notifications, exports)
+
+# Optional integrations (enable via env vars; safe-off by default):
+razorpay>=1.4            # online payments (set RAZORPAY=1 + keys to enable)

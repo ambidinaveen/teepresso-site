@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Teepresso Panel{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">T</div><div><b>Teepresso</b><small>{% block panel_name %}Panel{% endblock %}</small></div></div>
+    <div class="nav-group">
+      {% block nav %}{% endblock %}
+    </div>
+    <div class="spacer"></div>
+    <div class="side-user">
+      <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+      <div><b style="color:#fff;font-size:13px;">{{ request.user.get_full_name|default:request.user.username }}</b><br><small style="color:var(--ink-3);text-transform:capitalize;">{{ request.user.role }}</small></div>
+    </div>
+    <a href="{% url 'panels:logout' %}" class="nav-item" style="margin-top:6px;"><span class="ico">⎋</span> Logout</a>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="search">{% block search %}Search…{% endblock %}</div>
+      <div class="right">
+        {% block topbar_right %}{% endblock %}
+        <div class="avatar brand">{{ request.user.username|slice:":1"|upper }}</div>
+      </div>
+    </header>
+    <div class="content">
+      {% if messages %}
+        {% for m in messages %}
+          <div class="alert {% if m.tags == 'error' %}danger{% elif m.tags == 'success' %}info{% else %}warn{% endif %}" style="margin-bottom:12px;">{{ m }}</div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

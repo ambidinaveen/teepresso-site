@@ -1,0 +1,17 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}CMS · {{ label }}{% endblock %}{% block heading %}CMS — {{ label }}{% endblock %}
+{% block dash %}
+<div class="d-flex gap-2 mb-3 flex-wrap">
+  <a href="{% url 'dashboard:cms_list' 'banners' %}" class="btn btn-sm {% if kind == 'banners' %}btn-grad{% else %}btn-ghost-tp{% endif %}">Banners</a>
+  <a href="{% url 'dashboard:cms_list' 'faqs' %}" class="btn btn-sm {% if kind == 'faqs' %}btn-grad{% else %}btn-ghost-tp{% endif %}">FAQs</a>
+  <a href="{% url 'dashboard:cms_list' 'testimonials' %}" class="btn btn-sm {% if kind == 'testimonials' %}btn-grad{% else %}btn-ghost-tp{% endif %}">Testimonials</a>
+  <a href="{% url 'dashboard:cms_list' 'blogs' %}" class="btn btn-sm {% if kind == 'blogs' %}btn-grad{% else %}btn-ghost-tp{% endif %}">Blog posts</a>
+  <a href="{% url 'dashboard:cms_new' kind %}" class="btn btn-grad btn-sm ms-auto"><i class="bi bi-plus-lg"></i> Add {{ label|lower }}</a>
+</div>
+<div class="table-tp"><table class="table align-middle mb-0">
+  <tbody>{% for item in items %}
+    <tr><td class="ps-3 fw-semibold">{{ item }}</td>
+    <td class="text-end pe-3"><a href="{% url 'dashboard:cms_edit' kind item.id %}" class="btn btn-sm btn-ghost-tp">Edit</a> <a href="{% url 'dashboard:cms_delete' kind item.id %}" class="btn btn-sm text-danger" onclick="return confirm('Delete this item?')">Delete</a></td></tr>
+  {% empty %}<tr><td class="text-center text-muted py-4">No {{ label|lower }} yet.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

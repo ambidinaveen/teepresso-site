@@ -1,0 +1,65 @@
+{% extends "base_store.html" %}
+{% block content %}
+<section class="hero">
+  <div style="max-width:1100px;margin:0 auto;">
+    <h1 style="font-size:38px;max-width:640px;">Design custom T-shirts your way.</h1>
+    <p style="margin-top:14px;max-width:560px;color:#cfd6e6;">Pick quality, type, size &amp; colour. Live pricing. Free mockups on WhatsApp. Delivered in {{ RULES.DELIVERY_DAYS }}.</p>
+    <div class="flex" style="margin-top:22px;gap:10px;">
+      <a href="#styles" class="btn lg">Start Designing →</a>
+      <a href="{% url 'storefront:tracking' %}" class="btn ghost lg" style="color:#fff;border-color:rgba(255,255,255,.3);">Track an Order</a>
+    </div>
+    <div class="flex" style="margin-top:20px;gap:8px;flex-wrap:wrap;">
+      <span class="badge" style="background:rgba(255,255,255,.12);color:#fff;">Dynamic pricing</span>
+      <span class="badge" style="background:rgba(255,255,255,.12);color:#fff;">WhatsApp mockup approval</span>
+      <span class="badge" style="background:rgba(255,255,255,.12);color:#fff;">Bulk orders 300+</span>
+    </div>
+  </div>
+</section>
+
+<section id="styles" style="max-width:1100px;margin:34px auto;padding:0 24px;">
+  <h2 style="font-size:22px;margin-bottom:16px;">Popular T-shirt styles</h2>
+  <div class="grid g-4">
+    {% for p in products %}
+    <div class="product-card">
+      <div class="ph" style="background:{% cycle '#FFE9E3' '#E1F7F4' '#EAEEF7' '#EDEDED' %};">
+        <svg viewBox="0 0 120 130" width="110" height="120" xmlns="http://www.w3.org/2000/svg"><path d="M40 8 L20 18 L8 36 L20 48 L30 42 L30 122 L90 122 L90 42 L100 48 L112 36 L100 18 L80 8 C75 18 45 18 40 8 Z" fill="{% cycle '#FF5A3C' '#0FB5A6' '#2A3550' '#1B2230' %}" stroke="#0008" stroke-width="1"/></svg>
+      </div>
+      <div style="padding:14px;">
+        <b>{{ p.name }}</b>
+        <div class="muted" style="font-size:12.5px;margin:4px 0 10px;">{{ p.description|default:"Custom printed" }}</div>
+        <a href="{% url 'storefront:configurator' p.id %}" class="btn block">Customise</a>
+      </div>
+    </div>
+    {% empty %}
+      <p class="muted">No products yet — run <code>python manage.py seed</code>.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Registration popup (REQ-CW-1) -->
+{% if not customer %}
+<div id="reg-backdrop" style="position:fixed;inset:0;background:rgba(10,15,25,.55);display:grid;place-items:center;z-index:50;">
+  <div class="card" style="max-width:380px;width:92%;">
+    <h3 style="font-size:18px;">Let's get started</h3>
+    <p class="muted" style="font-size:13px;margin:6px 0 14px;">Enter your details to design &amp; order. We'll send your mockup to this WhatsApp number.</p>
+    <div id="reg-err" class="alert danger" style="display:none;margin-bottom:10px;"></div>
+    <div class="field"><label>Full Name</label><input class="input" id="reg-name" placeholder="Your name"></div>
+    <div class="field"><label>Phone Number</label><input class="input" id="reg-phone" placeholder="+91 98xxxxxxxx"></div>
+    <button class="btn block" onclick="doRegister()">Continue</button>
+    <p style="text-align:center;margin-top:10px;"><a href="#" class="muted" style="font-size:12.5px;" onclick="document.getElementById('reg-backdrop').style.display='none';return false;">Skip for now</a></p>
+  </div>
+</div>
+<script>
+function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const phone=document.getElementById('reg-phone').value.trim();
+  const err=document.getElementById('reg-err');
+  const fd=new FormData(); fd.append('name',name); fd.append('phone',phone);
+  fetch("{% url 'storefront:register' %}",{method:'POST',body:fd,headers:{'X-CSRFToken':getCookie('csrftoken')}})
+   .then(r=>r.json()).then(d=>{ if(d.ok){document.getElementById('reg-backdrop').style.display='none';}
+     else {err.textContent=d.error||'Please check your details.';err.style.display='block';}});
+}
+function getCookie(name){const v=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');return v?v.pop():'';}
+</script>
+{% endif %}
+{% endblock %}

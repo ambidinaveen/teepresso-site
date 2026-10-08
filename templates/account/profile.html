@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Profile — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section"><div class="row g-4">
+  <div class="col-lg-3">{% include 'partials/account_nav.html' with active='profile' %}</div>
+  <div class="col-lg-9">
+    <h4 class="fw-bold mb-3">Profile</h4>
+    <div class="card-tp p-4" style="max-width:640px">
+      <form method="post">{% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6"><label class="small fw-semibold">First name</label>{{ form.first_name }}</div>
+          <div class="col-md-6"><label class="small fw-semibold">Last name</label>{{ form.last_name }}</div>
+          <div class="col-md-6"><label class="small fw-semibold">Phone</label>{{ form.phone }}</div>
+          <div class="col-md-6"><label class="small fw-semibold">Company</label>{{ form.company }}</div>
+          <div class="col-md-6"><label class="small fw-semibold">GSTIN</label>{{ form.gst_number }}</div>
+        </div>
+        <button class="btn btn-grad mt-3">Save changes</button>
+        <a href="{% url 'accounts:forgot' %}" class="btn btn-link">Change password</a>
+      </form>
+    </div>
+  </div>
+</div></div>
+{% endblock %}

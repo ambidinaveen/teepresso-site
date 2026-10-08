@@ -1,0 +1,198 @@
+{% extends "base_store.html" %}
+{% load static %}
+{% block title %}Customise — {{ product.name }}{% endblock %}
+{% block content %}
+<div style="max-width:1100px;margin:24px auto;padding:0 24px;">
+  <div class="page-head"><h1>Design your {{ product.name }}</h1><span class="sub">Add text &amp; photos, drag them anywhere — live price updates</span></div>
+
+  <form method="post" action="{% url 'storefront:checkout' %}" id="cfg-form">
+    {% csrf_token %}
+    <input type="hidden" name="product_id" value="{{ product.id }}">
+    <input type="hidden" name="design_json" id="design_json">
+    <input type="hidden" name="design_preview" id="design_preview">
+
+    <div class="grid g-2">
+      <!-- DESIGN EDITOR -->
+      <div class="card" style="text-align:center;">
+        <div style="background:var(--bg);border-radius:12px;padding:16px;display:inline-block;">
+          <canvas id="tee-canvas" width="320" height="380" style="touch-action:none;"></canvas>
+        </div>
+
+        <!-- toolbar -->
+        <div class="flex" style="gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+          <button type="button" class="btn sm" onclick="addText()">➕ Add text</button>
+          <label class="btn sm ghost" style="cursor:pointer;">🖼️ Add photo
+            <input type="file" accept="image/*" onchange="addPhoto(event)" style="display:none;">
+          </label>
+          <button type="button" class="btn sm ghost" onclick="deleteSelected()">🗑 Delete</button>
+          <button type="button" class="btn sm ghost" onclick="clearDesign()">Clear</button>
+        </div>
+
+        <!-- selected-element controls -->
+        <div id="text-controls" class="card" style="margin-top:12px;text-align:left;display:none;">
+          <div class="field" style="margin-bottom:8px;"><label>Text</label>
+            <input class="input" id="txt-value" oninput="updateText()" placeholder="Type your text / quote"></div>
+          <div class="row" style="gap:10px;">
+            <div class="field" style="margin-bottom:0;"><label>Size</label>
+              <input class="input" id="txt-size" type="range" min="10" max="80" value="28" oninput="updateText()"></div>
+            <div class="field" style="margin-bottom:0;max-width:90px;"><label>Colour</label>
+              <input class="input" id="txt-color" type="color" value="#ffffff" oninput="updateText()" style="height:38px;padding:3px;"></div>
+            <div class="field" style="margin-bottom:0;max-width:120px;"><label>Font</label>
+              <select class="input" id="txt-font" onchange="updateText()">
+                <option>Inter</option><option>Arial</option><option>Georgia</option>
+                <option>Impact</option><option>Courier New</option></select></div>
+          </div>
+          <label class="flex" style="gap:8px;margin-top:8px;cursor:pointer;"><input type="checkbox" id="txt-bold" onchange="updateText()"> Bold</label>
+        </div>
+        <p class="muted" style="font-size:11.5px;margin-top:8px;">Drag items to move · drag corners to resize/rotate · this is what our team prints.</p>
+      </div>
+
+      <!-- OPTIONS -->
+      <div>
+        <div class="card mb">
+          <label style="font-weight:600;">Quality</label>
+          <div class="chips" style="margin-top:8px;" id="quality-chips">
+            {% for q in qualities %}
+            <label class="chip {% if forloop.first %}active{% endif %}">
+              <input type="radio" name="quality_id" value="{{ q.id }}" data-delta="{{ q.price_delta }}" {% if forloop.first %}checked{% endif %} style="display:none;">{{ q.name }}
+            </label>{% endfor %}
+          </div>
+        </div>
+        <div class="card mb">
+          <label style="font-weight:600;">T-shirt colour</label>
+          <div class="flex" style="margin-top:10px;gap:10px;flex-wrap:wrap;" id="color-row">
+            {% for c in colors %}
+            <label class="swatch {% if forloop.first %}active{% endif %}" style="background:{{ c.hex }};" title="{{ c.name }}">
+              <input type="radio" name="color_id" value="{{ c.id }}" data-hex="{{ c.hex }}" data-name="{{ c.name }}" {% if forloop.first %}checked{% endif %} style="display:none;"></label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="card mb">
+          <label style="font-weight:600;">Sizes &amp; quantity</label>
+          <table class="table" style="margin-top:6px;">
+            {% for s in sizes %}
+            <tr><td style="width:60px;"><b>{{ s.code }}</b></td>
+              <td><input class="input qty" type="number" min="0" value="0" name="size_{{ s.id }}" style="width:90px;"></td></tr>
+            {% endfor %}
+          </table>
+          <div class="flex between" style="margin-top:8px;"><span class="muted">Total quantity</span><b id="qty-total">0 pcs</b></div>
+        </div>
+        <div class="card mb">
+          <label class="flex" style="gap:10px;cursor:pointer;">
+            <input type="checkbox" name="urgent" id="urgent"> <b>Urgent order</b>
+            <span class="badge warn" style="margin-left:auto;">+{{ RULES.URGENT_PCT }}%</span></label>
+          <label class="flex" style="gap:10px;cursor:pointer;margin-top:10px;">
+            <input type="checkbox" name="wants_mockup" id="wants_mockup"> <b>Also want our team to refine it?</b>
+            <span class="badge brand" style="margin-left:auto;">WhatsApp</span></label>
+        </div>
+        <div class="card mb">
+          <div class="flex between"><span class="muted">Unit price</span><b id="unit">₹0</b></div>
+          <div class="flex between"><span class="muted">Subtotal</span><span id="subtotal">₹0</span></div>
+          <div class="flex between"><span class="muted">Urgent (+{{ RULES.URGENT_PCT }}%)</span><span id="urgentc">₹0</span></div>
+          <div class="flex between"><span class="muted">GST ({{ RULES.GST_RATE }}%)</span><span id="gst">₹0</span></div>
+          <div class="hr"></div>
+          <div class="flex between"><b>Total</b><b class="price" id="total" style="font-size:24px;">₹0</b></div>
+          <div id="bulk-note" class="alert info" style="display:none;margin-top:10px;">Ordering 300+ pieces? Our team will call to confirm bulk pricing.</div>
+        </div>
+        <button class="btn lg block" type="submit" onclick="return saveDesign()">Continue to checkout →</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script src="{% static 'js/fabric.min.js' %}"></script>
+<script>
+const PRICE_URL="{% url 'storefront:price_api' %}";
+const TSHIRT_PATH="M40 8 L20 18 L8 36 L20 48 L30 42 L30 122 L90 122 L90 42 L100 48 L112 36 L100 18 L80 8 C75 18 45 18 40 8 Z";
+let teeColor="{{ colors.0.hex|default:'#0FB5A6' }}";
+
+// --- Fabric canvas ---
+const canvas=new fabric.Canvas('tee-canvas',{backgroundColor:'#F4F6FA',preserveObjectStacking:true});
+let tshirt;
+function drawShirt(){
+  if(tshirt) canvas.remove(tshirt);
+  tshirt=new fabric.Path(TSHIRT_PATH,{fill:teeColor,stroke:'#0006',strokeWidth:1,
+    selectable:false,evented:false,scaleX:2.5,scaleY:2.5,left:20,top:20});
+  canvas.add(tshirt); canvas.sendToBack(tshirt);
+}
+drawShirt();
+
+function addText(){
+  const t=new fabric.IText('YOUR TEXT',{left:120,top:150,fontSize:28,fill:'#ffffff',
+    fontFamily:'Inter',fontWeight:'normal',textAlign:'center',originX:'center',originY:'center'});
+  canvas.add(t); canvas.setActiveObject(t); showControls(t);
+}
+function addPhoto(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=f=>{ fabric.Image.fromURL(f.target.result,img=>{
+    img.scaleToWidth(120); img.set({left:130,top:170,originX:'center',originY:'center'});
+    canvas.add(img); canvas.setActiveObject(img); hideControls();
+  });};
+  reader.readAsDataURL(file); e.target.value="";
+}
+function deleteSelected(){const o=canvas.getActiveObject(); if(o){canvas.remove(o);hideControls();}}
+function clearDesign(){canvas.getObjects().slice().forEach(o=>{if(o!==tshirt)canvas.remove(o);});hideControls();}
+
+// selection -> controls
+function showControls(o){
+  if(o&&o.type==='i-text'){
+    document.getElementById('text-controls').style.display='block';
+    document.getElementById('txt-value').value=o.text;
+    document.getElementById('txt-size').value=o.fontSize;
+    document.getElementById('txt-color').value=o.fill;
+    document.getElementById('txt-bold').checked=o.fontWeight==='bold';
+    document.getElementById('txt-font').value=o.fontFamily;
+  } else hideControls();
+}
+function hideControls(){document.getElementById('text-controls').style.display='none';}
+function updateText(){
+  const o=canvas.getActiveObject(); if(!o||o.type!=='i-text')return;
+  o.set({text:document.getElementById('txt-value').value,
+    fontSize:parseInt(document.getElementById('txt-size').value),
+    fill:document.getElementById('txt-color').value,
+    fontFamily:document.getElementById('txt-font').value,
+    fontWeight:document.getElementById('txt-bold').checked?'bold':'normal'});
+  canvas.requestRenderAll();
+}
+canvas.on('selection:created',e=>showControls(e.selected[0]));
+canvas.on('selection:updated',e=>showControls(e.selected[0]));
+canvas.on('selection:cleared',hideControls);
+
+// serialize design on submit
+function saveDesign(){
+  // keep the shirt out of the saved design objects but in the preview image
+  const json=canvas.toJSON();
+  document.getElementById('design_json').value=JSON.stringify(json);
+  document.getElementById('design_preview').value=canvas.toDataURL({format:'png',multiplier:2});
+  return true;
+}
+
+// --- pricing (unchanged logic) ---
+function fmt(n){return '₹'+Number(n).toLocaleString('en-IN');}
+function qId(){const r=document.querySelector('input[name=quality_id]:checked');return r?r.value:'';}
+function totalQty(){let t=0;document.querySelectorAll('.qty').forEach(i=>t+=parseInt(i.value||0));return t;}
+function refresh(){
+  const qty=totalQty(); document.getElementById('qty-total').textContent=qty+' pcs';
+  const urgent=document.getElementById('urgent').checked?1:0;
+  fetch(`${PRICE_URL}?qty=${qty}&quality_id=${qId()}&urgent=${urgent}`).then(r=>r.json()).then(d=>{
+    document.getElementById('unit').textContent=fmt(d.unit_price);
+    document.getElementById('subtotal').textContent=fmt(d.subtotal);
+    document.getElementById('urgentc').textContent=fmt(d.urgent_charge);
+    document.getElementById('gst').textContent=fmt(d.gst);
+    document.getElementById('total').textContent=fmt(d.total);
+    document.getElementById('bulk-note').style.display=d.bulk_followup?'flex':'none';
+  });
+}
+document.querySelectorAll('#quality-chips .chip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('#quality-chips .chip').forEach(x=>x.classList.remove('active'));
+  c.classList.add('active'); c.querySelector('input').checked=true; refresh();}));
+document.querySelectorAll('#color-row .swatch').forEach(s=>s.addEventListener('click',()=>{
+  document.querySelectorAll('#color-row .swatch').forEach(x=>x.classList.remove('active'));
+  s.classList.add('active'); const inp=s.querySelector('input'); inp.checked=true;
+  teeColor=inp.dataset.hex; tshirt.set('fill',teeColor); canvas.requestRenderAll();}));
+document.querySelectorAll('.qty').forEach(i=>i.addEventListener('input',refresh));
+document.getElementById('urgent').addEventListener('change',refresh);
+refresh();
+</script>
+{% endblock %}

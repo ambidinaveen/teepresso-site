@@ -1,0 +1,18 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Design Approvals{% endblock %}{% block heading %}Custom Design Approvals{% endblock %}
+{% block dash %}
+<div class="row g-3">
+  {% for d in designs %}
+  <div class="col-md-4"><div class="stat-card">
+    <div class="pc-img mb-2" style="aspect-ratio:1/1;border-radius:10px">{% if d.preview %}<img src="{{ d.preview }}" style="width:100%;height:100%;object-fit:contain">{% else %}<div class="d-grid h-100 align-content-center text-center text-muted"><i class="bi bi-brush fs-1"></i></div>{% endif %}</div>
+    <b class="small">{{ d.product.name|truncatechars:30 }}</b>
+    <div class="small text-muted">{{ d.user.display_name|default:"Guest" }} · {{ d.print_position }}{% if d.custom_text %} · “{{ d.custom_text|truncatechars:20 }}”{% endif %}</div>
+    <form method="post" class="mt-2">{% csrf_token %}<input type="hidden" name="id" value="{{ d.id }}">
+      <select name="status" class="form-select form-select-sm mb-1">{% for v,l in statuses %}<option value="{{ v }}" {% if d.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+      <input name="admin_note" class="form-control form-control-sm mb-1" placeholder="Note to customer" value="{{ d.admin_note }}">
+      <button class="btn btn-grad btn-sm w-100">Save review</button>
+    </form>
+  </div></div>
+  {% empty %}<div class="col-12 text-center text-muted py-5"><i class="bi bi-brush fs-1"></i><p>No designs submitted yet.</p></div>{% endfor %}
+</div>
+{% endblock %}

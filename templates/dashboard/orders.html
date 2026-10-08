@@ -1,0 +1,25 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load humanize %}
+{% block title %}Orders{% endblock %}{% block heading %}Orders{% endblock %}
+{% block dash %}
+<form class="d-flex gap-2 mb-3 flex-wrap">
+  <input name="q" value="{{ q }}" class="form-control" style="max-width:280px" placeholder="Search order no / name / phone">
+  <select name="status" class="form-select" style="max-width:200px" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for v,l in statuses %}<option value="{{ v }}" {% if active_status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-grad">Search</button>
+</form>
+<div class="table-tp"><table class="table align-middle mb-0">
+  <thead><tr><th class="ps-3">Order</th><th>Customer</th><th>Date</th><th>Status</th><th>Payment</th><th>Total</th><th></th></tr></thead>
+  <tbody>{% for o in orders %}
+    <tr><td class="ps-3 fw-semibold">{{ o.order_no }}{% if o.eway_required %} <span class="badge bg-warning text-dark">E-Way</span>{% endif %}</td>
+    <td>{{ o.full_name }}<div class="small text-muted">{{ o.phone }}</div></td>
+    <td class="small">{{ o.created_at|date:"d M Y" }}</td>
+    <td><span class="status-pill s-{{ o.status }}">{{ o.status_label }}</span></td>
+    <td><span class="status-pill s-{{ o.payment_status }}">{{ o.get_payment_status_display }}</span></td>
+    <td>₹{{ o.total|floatformat:0|intcomma }}</td>
+    <td><a href="{% url 'dashboard:order_detail' o.order_no %}" class="btn btn-sm btn-ghost-tp">Manage</a></td></tr>
+  {% empty %}<tr><td colspan="7" class="text-center text-muted py-4">No orders found.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

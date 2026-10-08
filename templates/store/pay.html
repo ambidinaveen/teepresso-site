@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Pay for {{ order.order_no }} — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <div class="pay-shell">
+
+    <!-- ============ LEFT: payment methods ============ -->
+    <div class="pay-methods">
+      <div class="pay-head">
+        <span class="badge-soft"><i class="bi bi-shield-lock"></i> Secure checkout</span>
+        <h3 class="fw-bold mt-2 mb-1">Complete your payment</h3>
+        <p class="text-muted mb-0">Order <b>{{ order.order_no }}</b></p>
+      </div>
+
+      {% if upi_on %}
+      <!-- ---------- UPI ---------- -->
+      <div class="pay-block">
+        <div class="pay-block-head">
+          <span class="pay-ic" style="background:linear-gradient(135deg,#5f259f,#00baf2)"><i class="bi bi-phone"></i></span>
+          <div>
+            <h6 class="fw-bold mb-0">Pay by UPI</h6>
+            <small class="text-muted">PhonePe · Google Pay · Paytm · BHIM &amp; more</small>
+          </div>
+          <span class="pay-instant">Instant</span>
+        </div>
+
+        {% if upi_placeholder %}
+        <div class="alert alert-warning small d-flex gap-2 mb-3">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span><b>Demo UPI ID.</b> <code>{{ upi_vpa }}</code> is a placeholder and cannot receive money.
+          Set <code>BUSINESS_UPI_VPA</code> to your real VPA to go live — see <b>UPI_PAYMENTS_GUIDE.md</b>.</span>
+        </div>
+        {% endif %}
+
+        <!-- QR + apps -->
+        <div class="upi-grid">
+          <div class="qr-box">
+            <img src="{{ upi_qr }}" alt="Scan to pay ₹{{ order.total|floatformat:0 }} via UPI" width="180" height="180">
+            <p class="small text-muted mb-0 mt-2">Scan with any UPI app</p>
+          </div>
+
+          <div class="upi-right">
+            <p class="small fw-semibold mb-2 d-none d-lg-block">On your phone? Tap to pay:</p>
+            <div class="upi-apps">
+              {% for a in upi_apps %}
+              <a href="{{ a.uri }}" class="upi-app" style="--c:{{ a.color }}">
+                <i class="bi bi-{{ a.icon }}"></i><span>{{ a.label }}</span>
+              </a>
+              {% endfor %}
+            </div>
+
+            <div class="vpa-copy" data-vpa="{{ upi_vpa }}">
+              <div>
+                <small class="text-muted d-block">Or pay to this UPI ID</small>
+                <b id="vpaText">{{ upi_vpa }}</b>
+              </div>
+              <button type="button" class="btn-copy" id="copyVpa"><i class="bi bi-clipboard"></i> Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- confirm ref -->
+        <form method="post" action="{% url 'payments:upi_confirm' order.order_no %}" class="upi-confirm">{% csrf_token %}
+          <label class="small fw-semibold">Already paid? Enter your UPI reference / UTR number</label>
+          <div class="d-flex gap-2 mt-1">
+            <input name="upi_ref" class="form-control" placeholder="e.g. 4517 2288 0011" inputmode="numeric" required>
+            <button class="btn btn-grad text-nowrap">I've paid</button>
+          </div>
+          <small class="text-muted d-block mt-2"><i class="bi bi-info-circle"></i>
+            The 12-digit reference appears in your UPI app after a successful payment.
+            We verify every payment before confirming your order.</small>
+        </form>
+
+        <a href="{{ upi_wa }}" target="_blank" class="wa-share">
+          <i class="bi bi-whatsapp"></i> Send payment screenshot on WhatsApp
+        </a>
+      </div>
+      {% endif %}
+
+      {% if razorpay_on %}
+      <!-- ---------- Razorpay ---------- -->
+      <div class="pay-block">
+        <div class="pay-block-head">
+          <span class="pay-ic" style="background:linear-gradient(135deg,#2563eb,#0ea5e9)"><i class="bi bi-credit-card-2-front"></i></span>
+          <div>
+            <h6 class="fw-bold mb-0">Cards, Net Banking &amp; UPI</h6>
+            <small class="text-muted">Secured by Razorpay</small>
+          </div>
+        </div>
+        <button id="rzpBtn" class="btn btn-grad w-100">Pay ₹{{ order.total|floatformat:0|intcomma }} with Razorpay</button>
+        <form id="rzpForm" method="post" action="{% url 'payments:callback' %}">{% csrf_token %}
+          <input type="hidden" name="order_no" value="{{ order.order_no }}">
+          <input type="hidden" name="razorpay_order_id" id="rzp_oid">
+          <input type="hidden" name="razorpay_payment_id" id="rzp_pid">
+          <input type="hidden" name="razorpay_signature" id="rzp_sig">
+        </form>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script>
+        document.getElementById('rzpBtn').onclick = function(){
+          var rzp = new Razorpay({ key:"{{ razorpay_key }}", amount:{{ order.total }}*100, currency:"INR",
+            name:"{{ BRAND }}", order_id:"{{ payment.gateway_order_id }}",
+            handler:function(r){ document.getElementById('rzp_oid').value=r.razorpay_order_id; document.getElementById('rzp_pid').value=r.razorpay_payment_id; document.getElementById('rzp_sig').value=r.razorpay_signature; document.getElementById('rzpForm').submit(); }});
+          rzp.open();
+        };
+        </script>
+      </div>
+      {% endif %}
+
+      {% if not razorpay_on and not upi_on %}
+      <div class="pay-block">
+        <div class="alert alert-info small mb-3"><i class="bi bi-shield-check"></i> <b>Safe demo mode.</b>
+          No payment gateway is connected, so no money is charged.</div>
+        <a href="{% url 'payments:simulate_success' order.order_no %}" class="btn btn-grad w-100 mb-2">
+          <i class="bi bi-check2-circle"></i> Simulate successful payment</a>
+      </div>
+      {% endif %}
+
+      <!-- ---------- Pay later ---------- -->
+      <div class="pay-alt">
+        <a href="{% url 'payments:place_as_enquiry' order.order_no %}" class="btn btn-ghost-tp w-100">
+          <i class="bi bi-clock-history"></i> Place as enquiry (pay later)
+        </a>
+        <p class="text-center small text-muted mt-2 mb-0">Our team will contact you to collect payment.</p>
+      </div>
+    </div>
+
+    <!-- ============ RIGHT: summary ============ -->
+    <aside class="pay-summary">
+      <div class="card-tp p-4">
+        <h6 class="fw-bold mb-3">Payment summary</h6>
+        <div class="pay-amount">
+          <span class="text-muted small">Amount payable</span>
+          <div class="amt">₹{{ order.total|floatformat:0|intcomma }}</div>
+        </div>
+        <ul class="pay-facts">
+          <li><i class="bi bi-receipt"></i> Order <b>{{ order.order_no }}</b></li>
+          <li><i class="bi bi-box-seam"></i> {{ order.items.count }} item{{ order.items.count|pluralize }} · {{ order.qty_total }} pcs</li>
+          <li><i class="bi bi-truck"></i> Ships to {{ order.full_name }}</li>
+        </ul>
+        <div class="pay-trust">
+          <span><i class="bi bi-shield-check text-success"></i> 100% secure</span>
+          <span><i class="bi bi-arrow-counterclockwise text-primary"></i> Easy support</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('copyVpa');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    var vpa = document.getElementById('vpaText').textContent.trim();
+    navigator.clipboard.writeText(vpa).then(function(){
+      btn.innerHTML = '<i class="bi bi-check2"></i> Copied';
+      setTimeout(function(){ btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 1800);
+    });
+  });
+})();
+</script>
+{% endblock %}

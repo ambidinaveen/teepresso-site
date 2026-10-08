@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teepresso — Staff Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body style="background:linear-gradient(120deg,#161D2B,#2A3550);min-height:100vh;display:grid;place-items:center;">
+  <div class="card" style="width:360px;max-width:92%;">
+    <div class="brand" style="justify-content:center;margin-bottom:6px;"><div class="logo">T</div><div><b style="color:var(--ink);">Teepresso</b><small class="muted">Staff Panel</small></div></div>
+    <h3 style="text-align:center;font-size:17px;margin-bottom:14px;">Sign in</h3>
+    {% if messages %}{% for m in messages %}<div class="alert danger" style="margin-bottom:10px;">{{ m }}</div>{% endfor %}{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="field"><label>Username</label><input class="input" name="username" autofocus required></div>
+      <div class="field"><label>Password</label><input class="input" type="password" name="password" required></div>
+      <button class="btn block" type="submit">Login</button>
+    </form>
+    <p class="muted" style="font-size:11.5px;text-align:center;margin-top:12px;">Each role lands on its own panel. Access is enforced server-side.</p>
+  </div>
+</body>
+</html>

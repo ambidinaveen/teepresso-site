@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}{{ product.name }} — {{ BRAND }}{% endblock %}
+{% block content %}
+<div class="container-tp section">
+  <nav class="small text-muted mb-3"><a href="{% url 'storefront:index' %}">Home</a> / <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a> / {{ product.name|truncatechars:30 }}</nav>
+  <div class="row g-4">
+    <!-- gallery -->
+    <div class="col-lg-6">
+      <div class="card-tp p-2">
+        <div class="pc-img" style="aspect-ratio:1/1;border-radius:12px">
+          <img id="mainImg" src="{% if product.image %}{{ product.image.url }}{% endif %}" alt="{{ product.name }}" style="object-fit:cover;width:100%;height:100%">
+        </div>
+      </div>
+      {% if product.images.all %}
+      <div class="d-flex gap-2 mt-2 flex-wrap">
+        {% if product.image %}<img class="thumb" src="{{ product.image.url }}" onclick="document.getElementById('mainImg').src=this.src" style="width:70px;height:70px;object-fit:cover;border-radius:10px;cursor:pointer;border:2px solid var(--brand)">{% endif %}
+        {% for im in product.images.all %}<img class="thumb" src="{{ im.image.url }}" onclick="document.getElementById('mainImg').src=this.src" style="width:70px;height:70px;object-fit:cover;border-radius:10px;cursor:pointer;border:1px solid var(--line)">{% endfor %}
+      </div>
+      {% endif %}
+      {% for v in product.videos.all %}<div class="ratio ratio-16x9 mt-3"><iframe src="{{ v.url }}" allowfullscreen></iframe></div>{% endfor %}
+    </div>
+
+    <!-- info -->
+    <div class="col-lg-6">
+      <span class="badge-soft">{{ product.category.name }}</span>
+      <h1 class="fw-bold mt-2" style="font-size:1.7rem">{{ product.name }}</h1>
+      <div class="stars mb-2">{% for s in product.stars %}<i class="bi bi-star-fill"></i>{% endfor %}<span class="text-muted small ms-1">{{ product.avg_rating|floatformat:1 }} ({{ product.review_count }} reviews)</span></div>
+      <p class="text-muted">{{ product.short_description }}</p>
+      <div class="d-flex align-items-baseline gap-2 my-3">
+        <span class="fw-bold" style="font-size:1.8rem">From ₹{{ product.price|floatformat:0|intcomma }}</span>
+        {% if product.on_sale %}<span class="pc-strike fs-5">₹{{ product.base_price|floatformat:0|intcomma }}</span><span class="badge bg-success">{{ product.discount_pct }}% OFF</span>{% endif %}
+      </div>
+      <p class="small text-muted"><i class="bi bi-tags"></i> Bulk pricing: more quantity = bigger discount (up to 25% off). MOQ {{ product.min_order_qty }} pc.</p>
+
+      <form method="post" action="{% url 'cart:add' product.id %}" class="js-add-cart card-tp p-3 my-3">{% csrf_token %}
+        {% for name, variants in variant_groups.items %}
+        <div class="mb-3">
+          <label class="fw-semibold small">{{ name }}</label>
+          <div class="d-flex flex-wrap gap-2 mt-1">
+            {% for v in variants %}
+            <label class="btn-ghost-tp btn-sm">
+              <input type="radio" name="variant_{{ name }}" value="{{ v.value }}" class="d-none" {% if forloop.first %}checked{% endif %}> {{ v.value }}{% if v.price_delta %} (+₹{{ v.price_delta|floatformat:0 }}){% endif %}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+        <div class="d-flex align-items-center gap-3">
+          <div>
+            <label class="small fw-semibold">Qty</label>
+            <input type="number" name="qty" value="{{ product.min_order_qty }}" min="{{ product.min_order_qty }}" class="form-control" style="width:110px">
+          </div>
+          <div class="flex-grow-1 d-flex gap-2 align-items-end">
+            <button class="btn btn-grad flex-grow-1"><i class="bi bi-bag-plus"></i> Add to Cart</button>
+            <button type="button" class="btn btn-ghost-tp js-wish {% if in_wishlist %}active{% endif %}" data-id="{{ product.id }}"><i class="bi bi-heart{% if in_wishlist %}-fill{% endif %}"></i></button>
+          </div>
+        </div>
+      </form>
+
+      {% if product.is_customizable %}
+      <a href="{% url 'products:customize' product.slug %}" class="btn btn-ghost-tp w-100"><i class="bi bi-brush"></i> Customize with your logo & text</a>
+      {% endif %}
+
+      <div class="d-flex gap-4 mt-3 small text-muted">
+        <span><i class="bi bi-truck"></i> {{ RULES.DELIVERY_DAYS }}</span>
+        <span><i class="bi bi-shield-check"></i> Secure payment</span>
+        <span><i class="bi bi-receipt"></i> GST invoice</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- tabs: description / specs / reviews -->
+  <div class="card-tp p-4 mt-4">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#desc">Description</button></li>
+      {% if product.spec_rows %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#spec">Specifications</button></li>{% endif %}
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#rev">Reviews ({{ product.review_count }})</button></li>
+    </ul>
+    <div class="tab-content pt-3">
+      <div class="tab-pane fade show active" id="desc"><p class="text-muted">{{ product.description|linebreaks|default:product.short_description }}</p></div>
+      {% if product.spec_rows %}
+      <div class="tab-pane fade" id="spec">
+        <table class="table"><tbody>{% for k,v in product.spec_rows %}<tr><th style="width:30%">{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}</tbody></table>
+      </div>
+      {% endif %}
+      <div class="tab-pane fade" id="rev">
+        {% for r in reviews %}
+        <div class="border-bottom py-2"><div class="d-flex justify-content-between"><b>{{ r.name }}</b><span class="stars">{% for i in ""|center:r.rating %}<i class="bi bi-star-fill"></i>{% endfor %}</span></div><p class="text-muted small mb-0">{{ r.comment }}</p></div>
+        {% empty %}<p class="text-muted">No reviews yet. Be the first!</p>{% endfor %}
+        <form method="post" action="{% url 'products:add_review' product.slug %}" class="mt-3">{% csrf_token %}
+          <div class="row g-2">
+            {% if not user.is_authenticated %}<div class="col-md-4"><input name="name" class="form-control" placeholder="Your name"></div>{% endif %}
+            <div class="col-md-3"><select name="rating" class="form-select"><option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option></select></div>
+            <div class="col"><input name="comment" class="form-control" placeholder="Write a review…"></div>
+            <div class="col-auto"><button class="btn btn-grad">Post</button></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- related -->
+  {% if related %}
+  <section class="mt-5">
+    <h4 class="fw-bold mb-3">You may also like</h4>
+    <div class="row g-3">{% for item in related %}<div class="col-6 col-md-3">{% include 'partials/product_card.html' with p=item %}</div>{% endfor %}</div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>document.querySelectorAll('label.btn-ghost-tp input[type=radio]').forEach(r=>{r.addEventListener('change',function(){this.closest('div').querySelectorAll('label').forEach(l=>l.style.borderColor='var(--line)');this.closest('label').style.borderColor='var(--brand)';});});</script>
+{% endblock %}
