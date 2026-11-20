@@ -15,6 +15,7 @@ and the POSTGRES_* / REDIS_URL vars. See deploy/README and RUN_AND_DEPLOY.md.
 """
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -97,7 +98,20 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # --- Database -------------------------------------------------------------
-if os.environ.get("POSTGRES_DB"):
+database_url = os.environ.get("DATABASE_URL", "").strip()
+if database_url:
+    database = urlparse(database_url)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": database.path.lstrip("/"),
+            "USER": database.username or "",
+            "PASSWORD": database.password or "",
+            "HOST": database.hostname or "localhost",
+            "PORT": database.port or "5432",
+        }
+    }
+elif os.environ.get("POSTGRES_DB"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

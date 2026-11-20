@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: teepresso-site
+    runtime: docker
+    plan: free
+    healthCheckPath: /accounts/login/
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SSL_REDIRECT
+        value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: teepresso-db
+          property: connectionString
+      - key: UPI
+        value: "1"
+      - key: RAZORPAY
+        value: "0"
+      - key: WHATSAPP_MODE
+        value: link
+      - key: SMS_API
+        value: "0"
+      - key: EWAY_API
+        value: "0"
+      - key: OTP_VERIFY
+        value: "0"
+
+databases:
+  - name: teepresso-db
+    plan: free
+    databaseName: teepresso
